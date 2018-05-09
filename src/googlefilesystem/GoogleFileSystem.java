@@ -16,6 +16,10 @@ public class GoogleFileSystem {
      */
     public static void main(String[] args) {
         // TODO code application logic here
+        
+        Controller cont = new Controller();
+        String[] str_args = {"127.0.0.1","9091","127.0.0.1","9092","1"};
+        ChunkServer cs = new ChunkServer(str_args);
     }
     
 }
