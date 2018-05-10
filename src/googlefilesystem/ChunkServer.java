@@ -8,6 +8,7 @@ package googlefilesystem;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -16,11 +17,63 @@ import java.util.logging.Logger;
  *
  * @author sridhar
  */
+
+
+class heartbeats implements Runnable
+{
+
+    static void calculate()
+    {
+        
+    }
+    
+    @Override
+    public void run() {
+        try {
+            Socket heartbeat = new Socket(ChunkServer.conthostname, ChunkServer.contportnum);
+            
+        } catch (IOException ex) {
+            
+        }
+       
+    }
+    
+}
+
+
+class ChunkServerListenener implements Runnable
+{
+    static ServerSocket chunklistener;
+
+    @Override
+    public void run() {
+        try {
+        chunklistener = new ServerSocket(ChunkServer.myportnum);
+        while(true)
+        {
+            Socket soc = chunklistener.accept();
+            DataInputStream in = new  DataInputStream(soc.getInputStream());
+            DataOutputStream out = new  DataOutputStream(soc.getOutputStream());
+            
+            
+        }
+        } catch (IOException ex) {
+            Logger.getLogger(ChunkServerListenener.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+    }
+    
+}
+
+
 public class ChunkServer {
 
     static int myportnum;
     static String myhostname;
     static String chunkserverID;
+    
+    static int contportnum;
+    static String conthostname;
     
     public ChunkServer(String[] args) {
         
@@ -28,7 +81,9 @@ public class ChunkServer {
             myhostname = args[2];
             myportnum = Integer.parseInt(args[3]);
             chunkserverID = args[4];
-            Socket soc = new Socket(args[0], Integer.parseInt(args[1]));            
+            contportnum = Integer.parseInt(args[1]);
+            conthostname = args[0];
+            Socket soc = new Socket(conthostname, contportnum);            
             DataOutputStream out = new DataOutputStream(soc.getOutputStream());
             DataInputStream in = new DataInputStream(soc.getInputStream());
             String request = "NEWCHUNKSERVER "+myhostname+" "+myportnum+" "+chunkserverID;
@@ -36,6 +91,9 @@ public class ChunkServer {
             String response = in.readUTF();
             if (response.equals("OK"))
             {System.out.println("The response ok is received ");}
+            soc.close();
+            
+            
             
         } catch (IOException ex) {
             
