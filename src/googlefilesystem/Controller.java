@@ -11,7 +11,10 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Hashtable;
+import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -31,14 +34,21 @@ class Listener implements Runnable {
         switch(args[0])
         {
             case "WRITEREQUEST":
-                break;
+                ArrayList<Integer> arr = new ArrayList<Integer>(hashtable.keySet());
+                Collections.shuffle(arr);
+                String str1 = hashtable.get(arr.get(0));
+                String str2 = hashtable.get(arr.get(1));
+                String str3 = hashtable.get(arr.get(2));
+                String write_str = "OK "+str1+" "+str2+" "+str3;
+                return write_str;
+                //break;
             case "MAJORHEARTBEAT":
                     break;
             case "MINORHEARTBEAT":
                     break;
             case "NEWCHUNKSERVER":
-                String str = args[1]+"/"+args[2];
-                hashtable.put(Integer.parseInt(args[3]), str);
+                String ns_str = args[1]+"/"+args[2];
+                hashtable.put(Integer.parseInt(args[3]), ns_str);
                 return "OK";
                 
             default:
