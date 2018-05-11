@@ -58,7 +58,7 @@ class ChunkServerListenener implements Runnable
             
         }
         } catch (IOException ex) {
-            Logger.getLogger(ChunkServerListenener.class.getName()).log(Level.SEVERE, null, ex);
+            
         }
         
     }
