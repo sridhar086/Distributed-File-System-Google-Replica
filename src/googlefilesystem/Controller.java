@@ -67,10 +67,13 @@ class Listener implements Runnable {
         try {
             while(true)
             {
+            
             Socket Childsoc = Serversocket.accept();
             String message = new DataInputStream(Childsoc.getInputStream()).readUTF();
             String response = answer(message);
+            
             new DataOutputStream(Childsoc.getOutputStream()).writeUTF(response);
+            Childsoc.close();
             
             }
         } catch (IOException ex) {

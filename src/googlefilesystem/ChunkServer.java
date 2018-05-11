@@ -78,11 +78,13 @@ public class ChunkServer {
     public ChunkServer(String[] args) {
         
         try {
+            conthostname = args[0];
+            contportnum = Integer.parseInt(args[1]);
             myhostname = args[2];
             myportnum = Integer.parseInt(args[3]);
             chunkserverID = args[4];
-            contportnum = Integer.parseInt(args[1]);
-            conthostname = args[0];
+            
+
             Socket soc = new Socket(conthostname, contportnum);            
             DataOutputStream out = new DataOutputStream(soc.getOutputStream());
             DataInputStream in = new DataInputStream(soc.getInputStream());

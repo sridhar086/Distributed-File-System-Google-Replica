@@ -21,9 +21,9 @@ public class GoogleFileSystem {
         // TODO code application logic here
         
         Controller cont = new Controller();
-        String[] cs_args1 = {"127.0.0.1","9091","127.0.0.1","9093","1"};
-        String[] cs_args2 = {"127.0.0.1","9091","127.0.0.1","9094","2"};
-        String[] cs_args3 = {"127.0.0.1","9091","127.0.0.1","9095","3"};
+        String[] cs_args1 = {"127.0.0.1","9091","127.0.0.1","9092","1"};
+        String[] cs_args2 = {"127.0.0.1","9091","127.0.0.1","9093","2"};
+        String[] cs_args3 = {"127.0.0.1","9091","127.0.0.1","9094","3"};
         ChunkServer cs1 = new ChunkServer(cs_args1);
         ChunkServer cs2 = new ChunkServer(cs_args2);
         ChunkServer cs3 = new ChunkServer(cs_args3);
@@ -33,8 +33,10 @@ public class GoogleFileSystem {
         } catch (InterruptedException ex) {
             Logger.getLogger(GoogleFileSystem.class.getName()).log(Level.SEVERE, null, ex);
         }
-        String[] c_args = {"127.0.0.1","9091"};
-        Client c = new Client(c_args);
+        //String[] c_args = {"127.0.0.1","9091"};
+        Client c = new Client();
+        c.ReadFile();
+        //c.WriteFileToDS("127.0.0.1",9091);
         
     }
     
