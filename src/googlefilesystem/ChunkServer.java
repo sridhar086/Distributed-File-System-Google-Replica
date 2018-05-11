@@ -93,6 +93,8 @@ public class ChunkServer {
             {System.out.println("The response ok is received ");}
             soc.close();
             
+            new Thread(new ChunkServerListenener()).start();
+            
             
             
         } catch (IOException ex) {
