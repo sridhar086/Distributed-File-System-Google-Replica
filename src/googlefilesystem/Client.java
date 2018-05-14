@@ -71,19 +71,22 @@ public class Client {
         
     }
     
-    private void Write(String c_write, String cserver1)
+    private void Write(String c_write, String cserver1, int NumChunks, boolean flag)
     {
         
         try {
             String[] arg = cserver1.split("/");
-            System.out.println(arg[0]+" "+arg[1]);
-            
+            System.out.println(arg[0]+" "+arg[1]);            
             DataOutputStream out = new DataOutputStream(this.soc.getOutputStream());
             DataInputStream in = new DataInputStream(this.soc.getInputStream());
-            out.writeUTF("WRITE");
             byte[] sent_byte  = c_write.getBytes("ISO-8859-1");
-            int length = sent_byte.length;
-            out.writeInt(length);
+            if (flag == false){
+            out.writeUTF("WRITE "+NumChunks);
+            //int length = sent_byte.length;
+            //out.writeInt(length);
+            
+            }
+            out.writeInt(sent_byte.length);
             out.write(sent_byte);
 
         } catch (IOException ex) {
@@ -151,15 +154,17 @@ public class Client {
             byte[] chunk = new byte[65536];
             int chunkLen = 0;
             this.soc = new Socket(cserver1.split("/")[0],Integer.parseInt(cserver1.split("/")[1]));
+            boolean flag = false;
             while ((chunkLen = is.read(chunk)) != -1) {
+                
                 //System.out.println("The chunk size is "+chunk.length+" "+chunkLen);
                 byte[] chunk_sent = deepcopy(chunk, chunkLen);
                 //System.out.println("The chunk size is "+chunk_sent.length+" "+chunkLen);
                 String sent_string = new String(chunk_sent,"ISO-8859-1");
                 String c_write = cserver2+" "+cserver3+" "+sent_string;              
-                this.Write(c_write, cserver1);               
-                System.out.println(SHA1FromBytes(chunk_sent)+" end of file writing one chunk");
-                break;
+                this.Write(c_write, cserver1, NumChunks, flag);             
+                System.out.println("hashcode "+SHA1FromBytes(chunk_sent));
+                flag = true;                
             }
             //soc.close();
             
