@@ -54,8 +54,9 @@ class heartbeats implements Runnable
 
 class ChunkServerListenener implements Runnable
 {
-    static ServerSocket chunklistener;
-    public String SHA1FromBytes(byte[] data) 
+    private Socket soc;
+    private static ServerSocket chunklistener;
+    public static String SHA1FromBytes(byte[] data) 
     {  
         try 
         {            
@@ -70,26 +71,38 @@ class ChunkServerListenener implements Runnable
         }
     }
       
-    public static String answer(String message)
+    public static void answer(Socket soc)
     {
+        try{
+        DataInputStream in = new DataInputStream(soc.getInputStream());
+        DataOutputStream out = new DataOutputStream(soc.getOutputStream());
+        String message = in.readUTF();      
+        
         String[] args = message.split(" ");
         switch(args[0])
         {
             case "WRITE":
-                ArrayList<Integer> arr = new ArrayList<Integer>(hashtable.keySet());
-                Collections.shuffle(arr);
-                String str1 = hashtable.get(arr.get(0));
-                String str2 = hashtable.get(arr.get(1));
-                String str3 = hashtable.get(arr.get(2));
-                String write_str = "OK "+str1+" "+str2+" "+str3;
-                return write_str;
-                //break;
+                int NumChunks = Integer.parseInt(message.split(" ")[1]);
+                while(NumChunks != 0){
+                int i = in.readInt();
+                byte[] r_byte = new byte[i];
+                in.readFully(r_byte);
+                String st = new String(r_byte,"ISO-8859-1");
+                String[] arg = st.split(" ",3);
+                byte[] wtf = arg[2].getBytes("ISO-8859-1");
+                System.out.println("hashcode "+SHA1FromBytes(wtf));
+                NumChunks -=1;            
+                //System.out.println(SHA1FromBytes(received_byte)+" "+length_bytes+" "+slice.length+" "+received_byte.length);
+                }
+                break;               
                
             default:
                 System.out.println("");             
             
         }
-        return "";        
+        
+        }catch(Exception e){}
+        
     }
 
     @Override
@@ -99,29 +112,9 @@ class ChunkServerListenener implements Runnable
         chunklistener = new ServerSocket(ChunkServer.myportnum);
         while(true)
         {            
-            Socket soc = chunklistener.accept();
-            DataInputStream in = new DataInputStream(soc.getInputStream());
-            DataOutputStream out = new DataOutputStream(soc.getOutputStream());
+            soc = chunklistener.accept();
+            answer(soc);
             
-            String str = in.readUTF();
-            
-            
-            int NumChunks = Integer.parseInt(str.split(" ")[1]);
-            while(NumChunks != 0){
-            int i = in.readInt();
-            //System.out.println("the length is "+i);
-            byte[] r_byte = new byte[i];
-            in.readFully(r_byte);
-            //System.out.println("did you read fully");
-            String st = new String(r_byte,"ISO-8859-1");
-            String[] args = st.split(" ",3);
-            byte[] wtf = args[2].getBytes("ISO-8859-1");
-            System.out.println("hashcode "+SHA1FromBytes(wtf));
-            NumChunks -=1;
-            
-            
-            //System.out.println(SHA1FromBytes(received_byte)+" "+length_bytes+" "+slice.length+" "+received_byte.length);
-            }
             
         }
         } catch (Exception ex) 

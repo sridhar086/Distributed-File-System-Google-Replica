@@ -116,8 +116,7 @@ public class Client {
     }
     
     public String SHA1FromBytes(byte[] data) 
-    {
-        
+    {      
         try 
         {            
             MessageDigest digest;
@@ -129,8 +128,6 @@ public class Client {
             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
             return "";
         }
-        
-
     }
     
     
@@ -155,8 +152,8 @@ public class Client {
             int chunkLen = 0;
             this.soc = new Socket(cserver1.split("/")[0],Integer.parseInt(cserver1.split("/")[1]));
             boolean flag = false;
-            while ((chunkLen = is.read(chunk)) != -1) {
-                
+            while ((chunkLen = is.read(chunk)) != -1) 
+            {                
                 //System.out.println("The chunk size is "+chunk.length+" "+chunkLen);
                 byte[] chunk_sent = deepcopy(chunk, chunkLen);
                 //System.out.println("The chunk size is "+chunk_sent.length+" "+chunkLen);
@@ -164,10 +161,9 @@ public class Client {
                 String c_write = cserver2+" "+cserver3+" "+sent_string;              
                 this.Write(c_write, cserver1, NumChunks, flag);             
                 System.out.println("hashcode "+SHA1FromBytes(chunk_sent));
-                flag = true;                
+                flag = true;
             }
-            //soc.close();
-            
+            soc.close();            
             } catch (Exception e) {
             // file not found, handle case
             }
