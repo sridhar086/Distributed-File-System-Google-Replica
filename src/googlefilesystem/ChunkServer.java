@@ -95,7 +95,12 @@ class ChunkServerListenener implements Runnable
                 //System.out.println(SHA1FromBytes(received_byte)+" "+length_bytes+" "+slice.length+" "+received_byte.length);
                 }
                 break;               
-               
+            
+            case "WRITEFORWARD":
+                break;
+                
+            case "READ":
+                break;
             default:
                 System.out.println("");             
             
