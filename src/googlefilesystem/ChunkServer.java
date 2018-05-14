@@ -5,11 +5,21 @@
  */
 package googlefilesystem;
 
+import static googlefilesystem.Listener.hashtable;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+
+import java.math.BigInteger;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -25,7 +35,8 @@ class heartbeats implements Runnable
     static void calculate()
     {
         
-    }
+    }    
+    
     
     @Override
     public void run() {
@@ -44,20 +55,76 @@ class heartbeats implements Runnable
 class ChunkServerListenener implements Runnable
 {
     static ServerSocket chunklistener;
+    
+    
+      public String SHA1FromBytes(byte[] data) 
+    {
+        
+        try 
+        {            
+            MessageDigest digest;
+            digest = MessageDigest.getInstance("SHA1");
+            byte[] hash = digest.digest(data);
+            BigInteger hashInt = new BigInteger(1, hash);
+            return hashInt.toString(16);
+        } catch (NoSuchAlgorithmException ex) {
+            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+            return "";
+        }
+        
+
+    }
+      
+           public static String answer(String message)
+    {
+        String[] args = message.split(" ");
+        switch(args[0])
+        {
+            case "WRITE":
+                ArrayList<Integer> arr = new ArrayList<Integer>(hashtable.keySet());
+                Collections.shuffle(arr);
+                String str1 = hashtable.get(arr.get(0));
+                String str2 = hashtable.get(arr.get(1));
+                String str3 = hashtable.get(arr.get(2));
+                String write_str = "OK "+str1+" "+str2+" "+str3;
+                return write_str;
+                //break;
+               
+            default:
+                System.out.println("");             
+            
+        }
+        return "";        
+    }
 
     @Override
     public void run() {
         try {
+        //System.out.println("waiting for a client from chunkserver");
         chunklistener = new ServerSocket(ChunkServer.myportnum);
         while(true)
-        {
+        {            
             Socket soc = chunklistener.accept();
-            DataInputStream in = new  DataInputStream(soc.getInputStream());
-            DataOutputStream out = new  DataOutputStream(soc.getOutputStream());
+            DataInputStream in = new DataInputStream(soc.getInputStream());
+            DataOutputStream out = new DataOutputStream(soc.getOutputStream());
             
+            String str = in.readUTF();
+            System.out.println("the string is "+str);
+            int i = in.readInt();
+            System.out.println("the length is "+i);
+            byte[] r_byte = new byte[i];
+            in.readFully(r_byte);
+            System.out.println("did you read fully");
+            String st = new String(r_byte,"ISO-8859-1");
+            String[] args = st.split(" ",3);
+            byte[] wtf = args[2].getBytes("ISO-8859-1");
+            System.out.println("the byte array dealing here is "+SHA1FromBytes(wtf));
+            //System.out.println(SHA1FromBytes(received_byte)+" "+length_bytes+" "+slice.length+" "+received_byte.length);
+
             
         }
-        } catch (IOException ex) {
+        } catch (Exception ex) 
+        {//System.out.println("connection closed");
             
         }
         
@@ -93,18 +160,10 @@ public class ChunkServer {
             String response = in.readUTF();
             if (response.equals("OK"))
             {System.out.println("The response ok is received ");}
-            soc.close();
-            
-            new Thread(new ChunkServerListenener()).start();
-            
-            
-            
+            soc.close();            
+            new Thread(new ChunkServerListenener()).start();           
         } catch (IOException ex) {
             
         }
-    }
-    
-    
-    
-    
+    }   
 }

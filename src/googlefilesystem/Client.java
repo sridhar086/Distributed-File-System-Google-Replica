@@ -6,15 +6,22 @@
 package googlefilesystem;
 
 import java.io.DataInputStream;
+import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -27,12 +34,13 @@ import java.util.logging.Logger;
 
 public class Client {
     
-    private Socket socket;
     
-    private String WriteRequest(String ControllerHost, int ControllerPort)
+    private Socket soc;
+    public ArrayList<String> WriteRequest(String ControllerHost, int ControllerPort)
     {
 
         try {
+        Socket socket;
         socket = new Socket();
         InetAddress addr = InetAddress.getByName(ControllerHost);
         SocketAddress sockaddr = new InetSocketAddress(addr, ControllerPort);
@@ -42,34 +50,54 @@ public class Client {
         out.writeUTF("WRITEREQUEST");
         String response = in.readUTF();
         //System.out.println("response "+response);
+        ArrayList<String> Arr = new ArrayList<String>();
         String[] arg;
         if (!response.isEmpty())
         {
             arg = response.split(" ");
-            String[] CServer1 = arg[1].split("/");
-            String[] CServer2 = arg[2].split("/");
-            String[] CServer3 = arg[3].split("/");
-            String ChunkServerMessage = "WRITE "+arg[2]+" "+ arg[3];
-            
+            Arr.add(arg[1]);Arr.add(arg[2]);Arr.add(arg[3]);
+            socket.close();
+            return Arr;
         }
-            return response;
+        socket.close();
+        return Arr;
             
             
         } catch (Exception ex) {
-            System.out.println("Exception in Client.java WriteRequest");
-            return "";
-            
+            System.out.println("Exception in Client.java WriteRequest");           
+            return new ArrayList<String>();
+                        
         } 
         
     }
     
-    private void Write()
+    private void Write(String c_write, String cserver1)
     {
+        
+        try {
+            String[] arg = cserver1.split("/");
+            System.out.println(arg[0]+" "+arg[1]);
+            
+            DataOutputStream out = new DataOutputStream(this.soc.getOutputStream());
+            DataInputStream in = new DataInputStream(this.soc.getInputStream());
+            out.writeUTF("WRITE");
+            byte[] sent_byte  = c_write.getBytes("ISO-8859-1");
+            int length = sent_byte.length;
+            out.writeInt(length);
+            out.write(sent_byte);
+
+        } catch (IOException ex) {
+            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        
         
     }
     
-    public void WriteFileToDS(String ControllerHost, int ControllerPort)
+    public void WriteFileToDS(String ControllerHost, int ControllerPort, ArrayList<String> Arr)
     {
+        
+        this.ReadFile(Arr);
         
         
     }
@@ -84,19 +112,57 @@ public class Client {
         return array;
     }
     
-    public void ReadFile()
+    public String SHA1FromBytes(byte[] data) 
     {
+        
+        try 
+        {            
+            MessageDigest digest;
+            digest = MessageDigest.getInstance("SHA1");
+            byte[] hash = digest.digest(data);
+            BigInteger hashInt = new BigInteger(1, hash);
+            return hashInt.toString(16);
+        } catch (NoSuchAlgorithmException ex) {
+            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+            return "";
+        }
+        
+
+    }
+    
+    
+    
+    public void ReadFile(ArrayList<String> Arr)
+    {
+        String cserver1 = new String();
+        String cserver2 = new String();
+        String cserver3 = new String();
+        cserver1 = Arr.get(0);
+        cserver2 = Arr.get(1);
+        cserver3 = Arr.get(2);
         
         try {
             File file = new File("TestFiles/image.jpg");
             FileInputStream is = new FileInputStream(file);
+            //System.out.println("The size of file is "+);
+            double FileSize = is.getChannel().size();
+            int NumChunks = (int) Math.ceil(FileSize/(double)65536);
+            System.out.println("Number of chunks "+NumChunks);
             byte[] chunk = new byte[65536];
             int chunkLen = 0;
+            this.soc = new Socket(cserver1.split("/")[0],Integer.parseInt(cserver1.split("/")[1]));
             while ((chunkLen = is.read(chunk)) != -1) {
-                System.out.println("The chunk size is "+chunk.length+" "+chunkLen);
+                //System.out.println("The chunk size is "+chunk.length+" "+chunkLen);
                 byte[] chunk_sent = deepcopy(chunk, chunkLen);
-                System.out.println("The chunk size is "+chunk_sent.length+" "+chunkLen);                
+                //System.out.println("The chunk size is "+chunk_sent.length+" "+chunkLen);
+                String sent_string = new String(chunk_sent,"ISO-8859-1");
+                String c_write = cserver2+" "+cserver3+" "+sent_string;              
+                this.Write(c_write, cserver1);               
+                System.out.println(SHA1FromBytes(chunk_sent)+" end of file writing one chunk");
+                break;
             }
+            //soc.close();
+            
             } catch (Exception e) {
             // file not found, handle case
             }

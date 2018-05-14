@@ -5,6 +5,7 @@
  */
 package googlefilesystem;
 
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -32,12 +33,13 @@ public class GoogleFileSystem {
             Thread.sleep(1000);
         } catch (InterruptedException ex) {
             Logger.getLogger(GoogleFileSystem.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        //String[] c_args = {"127.0.0.1","9091"};
-        Client c = new Client();
-        c.ReadFile();
-        //c.WriteFileToDS("127.0.0.1",9091);
+        }        
         
+        Client c = new Client();
+        ArrayList<String> Arr = new ArrayList<String>();
+        Arr = c.WriteRequest("127.0.0.1",9091);
+        if (Arr.size() != 0)
+        {c.WriteFileToDS("127.0.0.1",9091,Arr);}       
     }
     
 }

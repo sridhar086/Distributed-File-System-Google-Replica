@@ -49,15 +49,12 @@ class Listener implements Runnable {
             case "NEWCHUNKSERVER":
                 String ns_str = args[1]+"/"+args[2];
                 hashtable.put(Integer.parseInt(args[3]), ns_str);
-                return "OK";
-                
+                return "OK";                
             default:
-                System.out.println("");
-                
+                System.out.println("");             
             
         }
-        return "";
-        
+        return "";        
     }
     
     
@@ -70,8 +67,7 @@ class Listener implements Runnable {
             
             Socket Childsoc = Serversocket.accept();
             String message = new DataInputStream(Childsoc.getInputStream()).readUTF();
-            String response = answer(message);
-            
+            String response = answer(message);            
             new DataOutputStream(Childsoc.getOutputStream()).writeUTF(response);
             Childsoc.close();
             
