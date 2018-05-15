@@ -75,10 +75,12 @@ public class Client {
         
         try {
             String[] arg = cserver1.split("/");
-            System.out.println(arg[0]+" "+arg[1]);            
-            DataOutputStream out = new DataOutputStream(this.soc.getOutputStream());
-            DataInputStream in = new DataInputStream(this.soc.getInputStream());
+            System.out.println(arg[0]+" "+arg[1]);
+            Socket writesocket = new Socket(arg[0], Integer.parseInt(arg[1]));
+            DataOutputStream out = new DataOutputStream(writesocket.getOutputStream());
+            DataInputStream in = new DataInputStream(writesocket.getInputStream());
             byte[] sent_byte  = c_write.getBytes("ISO-8859-1");
+            out.writeUTF("WRITE "+"Filename");
             /*
             if (flag == false){
             out.writeUTF("WRITE "+NumChunks);
@@ -88,6 +90,8 @@ public class Client {
             }*/
             out.writeInt(sent_byte.length);
             out.write(sent_byte);
+            in.readUTF();
+            writesocket.close();
 
         } catch (IOException ex) {
             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);

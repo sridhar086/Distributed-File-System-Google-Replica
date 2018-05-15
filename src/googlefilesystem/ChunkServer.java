@@ -87,6 +87,7 @@ class ChunkServerListenener implements Runnable
                 int i = in.readInt();
                 byte[] r_byte = new byte[i];
                 in.readFully(r_byte);
+                out.writeUTF("OK");
                 String st = new String(r_byte,"ISO-8859-1");
                 String[] arg = st.split(" ",3);
                 byte[] wtf = arg[2].getBytes("ISO-8859-1");
@@ -94,6 +95,9 @@ class ChunkServerListenener implements Runnable
                 //NumChunks -=1;            
                 //System.out.println(SHA1FromBytes(received_byte)+" "+length_bytes+" "+slice.length+" "+received_byte.length);
                 
+                
+                
+                //buggy
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
@@ -105,7 +109,10 @@ class ChunkServerListenener implements Runnable
                 byte[] forward_byte  = forward_write.getBytes("ISO-8859-1");
                 DataOutputStream out = new DataOutputStream(WriteForwardSocket.getOutputStream());
                 DataInputStream in = new DataInputStream(WriteForwardSocket.getInputStream());
-                out.writeUTF("WRITEFORWARD");
+                out.writeUTF("WRITEFORWARD 1 "+"filename");
+                out.writeInt(forward_byte.length);
+                out.write(forward_byte);
+                in.readUTF();
                         }catch(Exception e){}
                     }
                 });
@@ -115,6 +122,37 @@ class ChunkServerListenener implements Runnable
                 break;               
             
             case "WRITEFORWARD":
+                int forwardhostsnum = Integer.parseInt(args[1]);
+                int j = in.readInt();
+                byte[] fr_byte = new byte[j];
+                in.readFully(fr_byte);
+                out.writeUTF("OK");
+                String fst = new String(fr_byte,"ISO-8859-1");
+                String[] farg = fst.split(" ",forwardhostsnum);
+                byte[] fwtf = farg[forwardhostsnum].getBytes("ISO-8859-1");
+                System.out.println("hashcode "+SHA1FromBytes(fwtf));
+                
+                
+                //buggy
+                
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try{
+                        String[] forwardhost = farg[0].split("/");
+                Socket WriteForwardSocket = new Socket(forwardhost[0], Integer.parseInt(forwardhost[1]));
+                String forward_string = new String(fwtf,"ISO-8859-1");
+                String forward_write = farg[1]+" "+forward_string;
+                byte[] forward_byte  = forward_write.getBytes("ISO-8859-1");
+                DataOutputStream out = new DataOutputStream(WriteForwardSocket.getOutputStream());
+                DataInputStream in = new DataInputStream(WriteForwardSocket.getInputStream());
+                out.writeUTF("WRITEFORWARD 1 "+"filename");
+                out.writeInt(forward_byte.length);
+                out.write(forward_byte);
+                in.readUTF();
+                        }catch(Exception e){}
+                    }
+                });
                 break;
                 
             case "READ":
