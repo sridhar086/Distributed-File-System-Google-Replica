@@ -35,13 +35,12 @@ import java.util.logging.Logger;
 public class Client {
     
     
-    private Socket soc;
+    //private Socket soc;
     public ArrayList<String> WriteRequest(String ControllerHost, int ControllerPort)
     {
 
         try {
-        Socket socket;
-        socket = new Socket();
+        Socket socket = new Socket();
         InetAddress addr = InetAddress.getByName(ControllerHost);
         SocketAddress sockaddr = new InetSocketAddress(addr, ControllerPort);
         socket.connect(sockaddr);
@@ -71,7 +70,7 @@ public class Client {
         
     }
     
-    private void Write(String c_write, String cserver1, int NumChunks, boolean flag)
+    private void Write(String c_write, String cserver1)//, int NumChunks, boolean flag)
     {
         
         try {
@@ -80,12 +79,13 @@ public class Client {
             DataOutputStream out = new DataOutputStream(this.soc.getOutputStream());
             DataInputStream in = new DataInputStream(this.soc.getInputStream());
             byte[] sent_byte  = c_write.getBytes("ISO-8859-1");
+            /*
             if (flag == false){
             out.writeUTF("WRITE "+NumChunks);
             //int length = sent_byte.length;
             //out.writeInt(length);
             
-            }
+            }*/
             out.writeInt(sent_byte.length);
             out.write(sent_byte);
 
@@ -97,12 +97,9 @@ public class Client {
         
     }
     
-    public void WriteFileToDS(String ControllerHost, int ControllerPort, ArrayList<String> Arr)
-    {
-        
-        this.ReadFile(Arr);
-        
-        
+    public void WriteFileToDS(String ControllerHost, int ControllerPort)
+    {      
+        this.ReadFile(ControllerHost, ControllerPort);      
     }
     
     public byte[] deepcopy(byte[] arr, int length)
@@ -132,15 +129,8 @@ public class Client {
     
     
     
-    public void ReadFile(ArrayList<String> Arr)
-    {
-        String cserver1 = new String();
-        String cserver2 = new String();
-        String cserver3 = new String();
-        cserver1 = Arr.get(0);
-        cserver2 = Arr.get(1);
-        cserver3 = Arr.get(2);
-        
+    public void ReadFile(String ControllerHost, int ControllerPort)
+    {       
         try {
             File file = new File("TestFiles/image.jpg");
             FileInputStream is = new FileInputStream(file);
@@ -150,20 +140,30 @@ public class Client {
             System.out.println("Number of chunks "+NumChunks);
             byte[] chunk = new byte[65536];
             int chunkLen = 0;
-            this.soc = new Socket(cserver1.split("/")[0],Integer.parseInt(cserver1.split("/")[1]));
-            boolean flag = false;
+            
+            //boolean flag = false;
             while ((chunkLen = is.read(chunk)) != -1) 
-            {                
+            {
+                ArrayList<String> Arr = new ArrayList<String>();
+                Arr = this.WriteRequest(ControllerHost, ControllerPort);
+                String cserver1 = new String();
+                String cserver2 = new String();
+                String cserver3 = new String();
+                cserver1 = Arr.get(0);
+                cserver2 = Arr.get(1);
+                cserver3 = Arr.get(2);
+                //this.soc = new Socket(cserver1.split("/")[0],Integer.parseInt(cserver1.split("/")[1]));
                 //System.out.println("The chunk size is "+chunk.length+" "+chunkLen);
                 byte[] chunk_sent = deepcopy(chunk, chunkLen);
                 //System.out.println("The chunk size is "+chunk_sent.length+" "+chunkLen);
                 String sent_string = new String(chunk_sent,"ISO-8859-1");
                 String c_write = cserver2+" "+cserver3+" "+sent_string;              
-                this.Write(c_write, cserver1, NumChunks, flag);             
+                this.Write(c_write, cserver1);//, NumChunks, flag);             
                 System.out.println("hashcode "+SHA1FromBytes(chunk_sent));
-                flag = true;
+                //flag = true;
+                break;
             }
-            soc.close();            
+            //soc.close();            
             } catch (Exception e) {
             // file not found, handle case
             }

@@ -82,8 +82,8 @@ class ChunkServerListenener implements Runnable
         switch(args[0])
         {
             case "WRITE":
-                int NumChunks = Integer.parseInt(message.split(" ")[1]);
-                while(NumChunks != 0){
+                //int NumChunks = Integer.parseInt(message.split(" ")[1]);
+                //while(NumChunks != 0){
                 int i = in.readInt();
                 byte[] r_byte = new byte[i];
                 in.readFully(r_byte);
@@ -91,9 +91,27 @@ class ChunkServerListenener implements Runnable
                 String[] arg = st.split(" ",3);
                 byte[] wtf = arg[2].getBytes("ISO-8859-1");
                 System.out.println("hashcode "+SHA1FromBytes(wtf));
-                NumChunks -=1;            
+                //NumChunks -=1;            
                 //System.out.println(SHA1FromBytes(received_byte)+" "+length_bytes+" "+slice.length+" "+received_byte.length);
-                }
+                
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try{
+                        String[] forwardhost = arg[0].split("/");
+                Socket WriteForwardSocket = new Socket(forwardhost[0], Integer.parseInt(forwardhost[1]));
+                String forward_string = new String(wtf,"ISO-8859-1");
+                String forward_write = arg[1]+" "+forward_string;
+                byte[] forward_byte  = forward_write.getBytes("ISO-8859-1");
+                DataOutputStream out = new DataOutputStream(WriteForwardSocket.getOutputStream());
+                DataInputStream in = new DataInputStream(WriteForwardSocket.getInputStream());
+                out.writeUTF("WRITEFORWARD");
+                        }catch(Exception e){}
+                    }
+                });
+                
+                
+                //}
                 break;               
             
             case "WRITEFORWARD":

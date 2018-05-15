@@ -36,10 +36,11 @@ public class GoogleFileSystem {
         }        
         
         Client c = new Client();
-        ArrayList<String> Arr = new ArrayList<String>();
-        Arr = c.WriteRequest("127.0.0.1",9091);
-        if (Arr.size() != 0)
-        {c.WriteFileToDS("127.0.0.1",9091,Arr);}       
+        //ArrayList<String> Arr = new ArrayList<String>();
+        //Arr = c.WriteRequest("127.0.0.1",9091);
+        //if (Arr.size() != 0)
+        //{c.WriteFileToDS("127.0.0.1",9091,Arr);}       
+        c.WriteFileToDS("127.0.0.1",9091);
     }
     
 }
