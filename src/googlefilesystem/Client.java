@@ -80,7 +80,7 @@ public class Client {
             DataOutputStream out = new DataOutputStream(writesocket.getOutputStream());
             DataInputStream in = new DataInputStream(writesocket.getInputStream());
             byte[] sent_byte  = c_write.getBytes("ISO-8859-1");
-            out.writeUTF("WRITE "+"Filename");
+            out.writeUTF("WRITE 2 "+"Filename");
             /*
             if (flag == false){
             out.writeUTF("WRITE "+NumChunks);
@@ -90,7 +90,7 @@ public class Client {
             }*/
             out.writeInt(sent_byte.length);
             out.write(sent_byte);
-            in.readUTF();
+            //in.readUTF();
             writesocket.close();
 
         } catch (IOException ex) {
