@@ -40,12 +40,7 @@ class heartbeats implements Runnable
     
     @Override
     public void run() {
-        try {
-            Socket heartbeat = new Socket(ChunkServer.conthostname, ChunkServer.contportnum);
-            
-        } catch (IOException ex) {
-            
-        }
+       
        
     }
     
@@ -54,9 +49,18 @@ class heartbeats implements Runnable
 
 class ChunkServerListenener implements Runnable
 {
-    private Socket soc;
-    private static ServerSocket chunklistener;
-    public static String SHA1FromBytes(byte[] data) 
+    //private Socket soc;
+    private ServerSocket chunklistener;
+    private String myhostname;
+    private int myportnum;
+    public ChunkServerListenener(String myhostname,int myportnum)
+    {
+        this.myhostname = myhostname;
+        this.myportnum = myportnum;
+                
+    }
+    
+    public String SHA1FromBytes(byte[] data) 
     {  
         try 
         {            
@@ -71,13 +75,13 @@ class ChunkServerListenener implements Runnable
         }
     }
       
-    public static void answer(Socket soc)
+    public void answer(Socket soc)
     {
         try{
         DataInputStream in = new DataInputStream(soc.getInputStream());
         DataOutputStream out = new DataOutputStream(soc.getOutputStream());
         String message = in.readUTF();      
-        
+        System.out.println("Received a new message "+myhostname+" "+myportnum);
         String[] args = message.split(" ");
         switch(args[0])
         {
@@ -93,9 +97,9 @@ class ChunkServerListenener implements Runnable
                 String st = new String(r_byte,"ISO-8859-1");
                 String[] arg = st.split(" ",NumHosts+1);               
                 byte[] wtf = arg[arg.length-1].getBytes("ISO-8859-1");
-                System.out.println("hashcode "+SHA1FromBytes(wtf));
+                //System.out.println("hashcode "+SHA1FromBytes(wtf));
                 
-                System.out.println("My host name and port number is "+ChunkServer.myhostname+" "+ChunkServer.myportnum+" no of hosts "+NumHosts);
+                System.out.println("No of hosts "+NumHosts);
                 /*saving the file with filename as a chunk */
                 //NumChunks -=1;            
                 //System.out.println(SHA1FromBytes(received_byte)+" "+length_bytes+" "+slice.length+" "+received_byte.length);
@@ -124,7 +128,9 @@ class ChunkServerListenener implements Runnable
                         }catch(Exception e){}
                     }
                 }).start();
+                
                 }
+                Thread.sleep(100);
                 
                 //}
                 break;               
@@ -178,10 +184,12 @@ class ChunkServerListenener implements Runnable
     public void run() {
         try {
         //System.out.println("waiting for a client from chunkserver");
-        chunklistener = new ServerSocket(ChunkServer.myportnum);
+        chunklistener = new ServerSocket(myportnum);
         while(true)
-        {            
-            soc = chunklistener.accept();
+        {
+            System.out.println("The chunk server is listening on port "+myportnum);
+            Socket soc = chunklistener.accept();
+            System.out.println(chunklistener.getLocalSocketAddress().toString());
             answer(soc);
             
             
@@ -198,12 +206,11 @@ class ChunkServerListenener implements Runnable
 
 public class ChunkServer {
 
-    static int myportnum;
-    static String myhostname;
-    static String chunkserverID;
-    
-    static int contportnum;
-    static String conthostname;
+    int myportnum;
+    String myhostname;
+    String chunkserverID;
+    int contportnum;
+    String conthostname;
     
     public ChunkServer(String[] args) {
         
@@ -224,7 +231,7 @@ public class ChunkServer {
             if (response.equals("OK"))
             {System.out.println("The response ok is received ");}
             soc.close();            
-            new Thread(new ChunkServerListenener()).start();           
+            new Thread(new ChunkServerListenener(myhostname,myportnum)).start();           
         } catch (IOException ex) {
             
         }

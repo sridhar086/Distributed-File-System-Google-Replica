@@ -22,25 +22,29 @@ public class GoogleFileSystem {
         // TODO code application logic here
         
         Controller cont = new Controller();
-        String[] cs_args1 = {"127.0.0.1","9091","127.0.0.1","9092","1"};
-        String[] cs_args2 = {"127.0.0.1","9091","127.0.0.1","9093","2"};
-        String[] cs_args3 = {"127.0.0.1","9091","127.0.0.1","9094","3"};
-        ChunkServer cs1 = new ChunkServer(cs_args1);
-        ChunkServer cs2 = new ChunkServer(cs_args2);
-        ChunkServer cs3 = new ChunkServer(cs_args3);
-        
+        String[] cs_args1 = {"localhost","9091","localhost","9092","1"};
+        String[] cs_args2 = {"localhost","9091","localhost","9093","2"};
+        String[] cs_args3 = {"localhost","9091","localhost","9094","3"};
         try {
-            Thread.sleep(1000);
+        ChunkServer cs1 = new ChunkServer(cs_args1);
+        Thread.sleep(500);
+        ChunkServer cs2 = new ChunkServer(cs_args2);
+        Thread.sleep(500);
+        ChunkServer cs3 = new ChunkServer(cs_args3);
+        Thread.sleep(500);
+        
+        
+            Thread.sleep(2000);
         } catch (InterruptedException ex) {
             Logger.getLogger(GoogleFileSystem.class.getName()).log(Level.SEVERE, null, ex);
         }        
         
         Client c = new Client();
         //ArrayList<String> Arr = new ArrayList<String>();
-        //Arr = c.WriteRequest("127.0.0.1",9091);
+        //Arr = c.WriteRequest("localhost",9091);
         //if (Arr.size() != 0)
-        //{c.WriteFileToDS("127.0.0.1",9091,Arr);}       
-        c.WriteFileToDS("127.0.0.1",9091);
+        //{c.WriteFileToDS("localhost",9091,Arr);}       
+        c.WriteFileToDS("localhost",9091);
     }
     
 }

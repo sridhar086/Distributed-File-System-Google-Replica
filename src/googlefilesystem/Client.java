@@ -75,7 +75,7 @@ public class Client {
         
         try {
             String[] arg = cserver1.split("/");
-            System.out.println(arg[0]+" "+arg[1]);
+            System.out.println("write from client to "+arg[0]+" "+arg[1]);
             Socket writesocket = new Socket(arg[0], Integer.parseInt(arg[1]));
             DataOutputStream out = new DataOutputStream(writesocket.getOutputStream());
             DataInputStream in = new DataInputStream(writesocket.getInputStream());
@@ -156,6 +156,7 @@ public class Client {
                 cserver1 = Arr.get(0);
                 cserver2 = Arr.get(1);
                 cserver3 = Arr.get(2);
+                System.out.println(cserver1+" "+cserver2+" "+cserver3);
                 //this.soc = new Socket(cserver1.split("/")[0],Integer.parseInt(cserver1.split("/")[1]));
                 //System.out.println("The chunk size is "+chunk.length+" "+chunkLen);
                 byte[] chunk_sent = deepcopy(chunk, chunkLen);
