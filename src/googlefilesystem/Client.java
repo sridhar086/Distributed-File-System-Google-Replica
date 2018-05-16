@@ -168,7 +168,7 @@ public class Client {
                 //System.out.println("hashcode "+SHA1FromBytes(chunk_sent));
                 chunkseq +=1;
                 //flag = true;
-                break;
+                //break;
             }
             //soc.close();            
             } catch (Exception e) {

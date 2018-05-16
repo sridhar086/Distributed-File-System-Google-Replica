@@ -8,6 +8,8 @@ package googlefilesystem;
 import static googlefilesystem.Listener.hashtable;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -53,11 +55,12 @@ class ChunkServerListenener implements Runnable
     private ServerSocket chunklistener;
     private String myhostname;
     private int myportnum;
-    public ChunkServerListenener(String myhostname,int myportnum)
+    private int chunkserverID;
+    public ChunkServerListenener(String myhostname,int myportnum, int chunkserverID)
     {
         this.myhostname = myhostname;
         this.myportnum = myportnum;
-                
+        this.chunkserverID = chunkserverID;
     }
     
     public String SHA1FromBytes(byte[] data) 
@@ -89,7 +92,7 @@ class ChunkServerListenener implements Runnable
                 
                 int NumHosts = Integer.parseInt(args[1]);
                 String FileName = new String(args[2]);
-                System.out.println("The file name is "+args[2]);
+                //System.out.println("The file name is "+args[2]);
                 int i = in.readInt();
                 byte[] r_byte = new byte[i];
                 in.readFully(r_byte);
@@ -101,7 +104,15 @@ class ChunkServerListenener implements Runnable
                 //System.out.println("hashcode "+SHA1FromBytes(wtf));
                 
                 //System.out.println("No of hosts "+NumHosts);
-                /*saving the file with filename as a chunk */
+                
+                
+                /*saving the file with filename as a chunk*/
+                
+                File file = new File("Chunks/"+FileName+"_"+chunkserverID);
+                FileOutputStream Fout = new FileOutputStream(file);
+                Fout.write(wtf);
+                Fout.close();
+                
                 
                 if (NumHosts != 0)
                 {
@@ -171,7 +182,7 @@ public class ChunkServer {
 
     int myportnum;
     String myhostname;
-    String chunkserverID;
+    int chunkserverID;
     int contportnum;
     String conthostname;
     
@@ -182,7 +193,7 @@ public class ChunkServer {
             contportnum = Integer.parseInt(args[1]);
             myhostname = args[2];
             myportnum = Integer.parseInt(args[3]);
-            chunkserverID = args[4];
+            chunkserverID = Integer.parseInt(args[4]);
             
 
             Socket soc = new Socket(conthostname, contportnum);            
@@ -194,7 +205,7 @@ public class ChunkServer {
             if (response.equals("OK"))
             {System.out.println("The response ok is received ");}
             soc.close();            
-            new Thread(new ChunkServerListenener(myhostname,myportnum)).start();           
+            new Thread(new ChunkServerListenener(myhostname,myportnum,chunkserverID)).start();           
         } catch (IOException ex) {
             
         }
