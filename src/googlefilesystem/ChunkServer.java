@@ -81,28 +81,27 @@ class ChunkServerListenener implements Runnable
         DataInputStream in = new DataInputStream(soc.getInputStream());
         DataOutputStream out = new DataOutputStream(soc.getOutputStream());
         String message = in.readUTF();      
-        System.out.println("Received a new message "+myhostname+" "+myportnum);
+        //System.out.println("Received a new message "+myhostname+" "+myportnum);
         String[] args = message.split(" ");
         switch(args[0])
         {
             case "WRITE":
-                //int NumChunks = Integer.parseInt(message.split(" ")[1]);
-                //while(NumChunks != 0){
+                
                 int NumHosts = Integer.parseInt(args[1]);
+                String FileName = new String(args[2]);
+                System.out.println("The file name is "+args[2]);
                 int i = in.readInt();
                 byte[] r_byte = new byte[i];
                 in.readFully(r_byte);
-                //out.writeUTF("OK");
+                
                 soc.close();
                 String st = new String(r_byte,"ISO-8859-1");
                 String[] arg = st.split(" ",NumHosts+1);               
                 byte[] wtf = arg[arg.length-1].getBytes("ISO-8859-1");
                 //System.out.println("hashcode "+SHA1FromBytes(wtf));
                 
-                System.out.println("No of hosts "+NumHosts);
+                //System.out.println("No of hosts "+NumHosts);
                 /*saving the file with filename as a chunk */
-                //NumChunks -=1;            
-                //System.out.println(SHA1FromBytes(received_byte)+" "+length_bytes+" "+slice.length+" "+received_byte.length);
                 
                 if (NumHosts != 0)
                 {
@@ -113,15 +112,13 @@ class ChunkServerListenener implements Runnable
                     try{
                     String[] forward = st.split(" ",2);
                     String[] forwardhost = forward[0].split("/");
-                    System.out.println("forward host and port number is "+forwardhost[0]+" "+forwardhost[1]);
+                    //System.out.println("forward host and port number is "+forwardhost[0]+" "+forwardhost[1]);
                     Socket WriteForwardSocket = new Socket(forwardhost[0], Integer.parseInt(forwardhost[1]));
-                    //byte[] wtf = forward[1].getBytes("ISO-8859-1");
-                    //String forward_string = new String(wtf,"ISO-8859-1");
-                    //String forward_write = arg[1]+" "+forward_string;
+                    
                     byte[] forward_byte  = forward[1].getBytes("ISO-8859-1");
                     DataOutputStream out = new DataOutputStream(WriteForwardSocket.getOutputStream());
                     DataInputStream in = new DataInputStream(WriteForwardSocket.getInputStream());
-                    out.writeUTF("WRITE "+(NumHosts-1)+" filename");
+                    out.writeUTF("WRITE "+(NumHosts-1)+" "+FileName);
                     out.writeInt(forward_byte.length);
                     out.write(forward_byte);
                     in.readUTF();
@@ -132,43 +129,9 @@ class ChunkServerListenener implements Runnable
                 }
                 Thread.sleep(100);
                 
-                //}
+                
                 break;               
-            /*
-            case "WRITEFORWARD":
-                int forwardhostsnum = Integer.parseInt(args[1]);
-                int j = in.readInt();
-                byte[] fr_byte = new byte[j];
-                in.readFully(fr_byte);
-                out.writeUTF("OK");
-                String fst = new String(fr_byte,"ISO-8859-1");
-                String[] farg = fst.split(" ",forwardhostsnum);
-                byte[] fwtf = farg[forwardhostsnum].getBytes("ISO-8859-1");
-                System.out.println("hashcode "+SHA1FromBytes(fwtf));
-                
-                
-                //buggy
-                
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try{
-                        String[] forwardhost = farg[0].split("/");
-                Socket WriteForwardSocket = new Socket(forwardhost[0], Integer.parseInt(forwardhost[1]));
-                String forward_string = new String(fwtf,"ISO-8859-1");
-                String forward_write = farg[1]+" "+forward_string;
-                byte[] forward_byte  = forward_write.getBytes("ISO-8859-1");
-                DataOutputStream out = new DataOutputStream(WriteForwardSocket.getOutputStream());
-                DataInputStream in = new DataInputStream(WriteForwardSocket.getInputStream());
-                out.writeUTF("WRITEFORWARD 1 "+"filename");
-                out.writeInt(forward_byte.length);
-                out.write(forward_byte);
-                in.readUTF();
-                        }catch(Exception e){}
-                    }
-                });
-                break;
-            */    
+               
             case "READ":
                 break;
             default:
@@ -189,7 +152,7 @@ class ChunkServerListenener implements Runnable
         {
             System.out.println("The chunk server is listening on port "+myportnum);
             Socket soc = chunklistener.accept();
-            System.out.println(chunklistener.getLocalSocketAddress().toString());
+            //System.out.println(chunklistener.getLocalSocketAddress().toString());
             answer(soc);
             
             

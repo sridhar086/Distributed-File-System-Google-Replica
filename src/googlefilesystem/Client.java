@@ -70,7 +70,7 @@ public class Client {
         
     }
     
-    private void Write(String c_write, String cserver1)//, int NumChunks, boolean flag)
+    private void Write(String c_write, String cserver1, String FileName, int chunkseq)//, int NumChunks, boolean flag)
     {
         
         try {
@@ -80,7 +80,7 @@ public class Client {
             DataOutputStream out = new DataOutputStream(writesocket.getOutputStream());
             DataInputStream in = new DataInputStream(writesocket.getInputStream());
             byte[] sent_byte  = c_write.getBytes("ISO-8859-1");
-            out.writeUTF("WRITE 2 "+"Filename");
+            out.writeUTF("WRITE 2 "+FileName+"_"+chunkseq);
             /*
             if (flag == false){
             out.writeUTF("WRITE "+NumChunks);
@@ -138,13 +138,14 @@ public class Client {
         try {
             File file = new File("TestFiles/image.jpg");
             FileInputStream is = new FileInputStream(file);
+            
             //System.out.println("The size of file is "+);
             double FileSize = is.getChannel().size();
             int NumChunks = (int) Math.ceil(FileSize/(double)65536);
             System.out.println("Number of chunks "+NumChunks);
             byte[] chunk = new byte[65536];
             int chunkLen = 0;
-            
+            int chunkseq = 0;
             //boolean flag = false;
             while ((chunkLen = is.read(chunk)) != -1) 
             {
@@ -163,8 +164,9 @@ public class Client {
                 //System.out.println("The chunk size is "+chunk_sent.length+" "+chunkLen);
                 String sent_string = new String(chunk_sent,"ISO-8859-1");
                 String c_write = cserver2+" "+cserver3+" "+sent_string;              
-                this.Write(c_write, cserver1);//, NumChunks, flag);             
-                System.out.println("hashcode "+SHA1FromBytes(chunk_sent));
+                this.Write(c_write, cserver1,file.getName(),chunkseq);//, NumChunks, flag);             
+                //System.out.println("hashcode "+SHA1FromBytes(chunk_sent));
+                chunkseq +=1;
                 //flag = true;
                 break;
             }
@@ -176,7 +178,7 @@ public class Client {
     }
     
     public Client()
-    {       
+    {
         
               
     }
