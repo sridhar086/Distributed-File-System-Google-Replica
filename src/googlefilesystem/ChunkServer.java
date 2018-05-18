@@ -22,6 +22,8 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Hashtable;
+import java.util.concurrent.SynchronousQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -34,7 +36,7 @@ import java.util.logging.Logger;
 class heartbeats implements Runnable
 {
 
-    static void calculate()
+    void calculate()
     {
         
     }    
@@ -42,12 +44,26 @@ class heartbeats implements Runnable
     
     @Override
     public void run() {
+        
+        
+        
        
        
     }
     
 }
 
+
+ class Inventory
+ {
+    private static Hashtable<String, Integer> Inventory = new Hashtable<String,Integer>();
+    
+    public static synchronized void addInventory(String filename)
+    {
+        Inventory.put(filename.split("_")[0], Integer.parseInt(filename.split("_")[1]));
+    }
+     
+ }
 
 class ChunkServerListenener implements Runnable
 {
@@ -105,7 +121,7 @@ class ChunkServerListenener implements Runnable
                 
                 //System.out.println("No of hosts "+NumHosts);
                 
-                
+                Inventory.addInventory(FileName);
                 /*saving the file with filename as a chunk*/
                 
                 File file = new File("Chunks/"+FileName+"_"+chunkserverID);
@@ -206,7 +222,12 @@ public class ChunkServer {
             if (response.equals("OK"))
             {System.out.println("The response ok is received ");}
             soc.close();            
-            new Thread(new ChunkServerListenener(myhostname,myportnum,chunkserverID)).start();           
+            new Thread(new ChunkServerListenener(myhostname,myportnum,chunkserverID)).start();
+            
+            new Thread(new heartbeats()).start();
+            
+            
+            
         } catch (IOException ex) {
             
         }

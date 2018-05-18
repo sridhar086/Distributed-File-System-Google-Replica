@@ -177,6 +177,13 @@ public class Client {
         
     }
     
+    public void ReadFileFromDS(String ControllerHost, int ControllerPort, String FileName)
+    {
+        
+    }
+    
+    
+    
     public Client()
     {
         
