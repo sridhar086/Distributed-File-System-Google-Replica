@@ -26,29 +26,69 @@ import java.util.Hashtable;
 import java.util.concurrent.SynchronousQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.net.ssl.SSLSocket;
 
 /**
  *
  * @author sridhar
  */
+class minorheartbeats implements Runnable
+{  
+    private String conthostname;
+    private int contportnum;
+    private int chunkserverID;
 
-
-class heartbeats implements Runnable
-{
-
-    void calculate()
-    {
-        
-    }    
-    
+    public minorheartbeats(String conthostname,int contportnum, int chunkserverID) {
+        this.conthostname = new String();
+        this.conthostname = conthostname;
+        this.contportnum = contportnum;
+        this.chunkserverID = chunkserverID;
+    }  
     
     @Override
     public void run() {
-        
-        
-        
-       
-       
+        try
+        {
+            Thread.sleep(30000);
+            String heartbeatstring = new String();
+            heartbeatstring = Inventory.TransferAndSend();
+            Socket soc = new Socket(conthostname,contportnum);
+            DataOutputStream dout = new DataOutputStream(soc.getOutputStream());
+            DataInputStream din = new DataInputStream(soc.getInputStream());
+            int heartbeatbytelength = heartbeatstring.getBytes("ISO-8859-1").length;
+            byte[] heartbeatbyte = new byte[heartbeatbytelength];
+            heartbeatbyte = heartbeatstring.getBytes("ISO-8859-1");
+            
+            dout.writeUTF("MINORHEARTBEAT "+chunkserverID+" "+heartbeatbytelength);
+            dout.write(heartbeatbyte);
+            //heartbeatstring
+            
+        }
+        catch(Exception e){}     
+    }  
+}
+
+
+class majorheartbeats implements Runnable
+{   
+    private String conthostname;
+    private int contportnum;
+    private int chunkserverID;
+
+    public majorheartbeats(String conthostname,int contportnum, int chunkserverID) {
+        this.conthostname = new String();
+        this.conthostname = conthostname;
+        this.contportnum = contportnum;
+        this.chunkserverID = chunkserverID;
+    }
+    @Override
+    public void run() {
+        try
+        {
+            Thread.sleep(300000);
+            
+        }
+        catch(Exception e){}     
     }
     
 }
@@ -56,13 +96,39 @@ class heartbeats implements Runnable
 
  class Inventory
  {
-    private static Hashtable<String, Integer> Inventory = new Hashtable<String,Integer>();
-    
-    public static synchronized void addInventory(String filename)
-    {
-        Inventory.put(filename.split("_")[0], Integer.parseInt(filename.split("_")[1]));
-    }
+     private static Hashtable<String , Integer> tempInventory;// = new Hashtable<String,Integer>();
+     private static Hashtable<String, Integer> Inventory;// = new Hashtable<String,Integer>();
+     private Object lock1;
      
+     public Inventory()
+     {
+         tempInventory = new Hashtable<String,Integer>();
+         Inventory = new Hashtable<String,Integer>();
+         lock1 = new Object();   
+     }    
+     
+     public static void addInventory(String filename)
+     {
+        Inventory.put(filename.split("_")[0], Integer.parseInt(filename.split("_")[1]));
+     } 
+         
+     public static synchronized void addtempInventory(String filename)
+     {
+        tempInventory.put(filename.split("_")[0], Integer.parseInt(filename.split("_")[1]));
+     }
+     
+     public static synchronized String TransferAndSend()
+     {
+         String str = new String();
+        for(String key : tempInventory.keySet()) 
+        {            
+            Inventory.put(key, tempInventory.get(key));
+            str+=key+" "+tempInventory.get(key)+" ";
+            
+        }
+        return str;
+     }    
+      
  }
 
 class ChunkServerListenener implements Runnable
@@ -121,7 +187,7 @@ class ChunkServerListenener implements Runnable
                 
                 //System.out.println("No of hosts "+NumHosts);
                 
-                Inventory.addInventory(FileName);
+                Inventory.addtempInventory(FileName);
                 /*saving the file with filename as a chunk*/
                 
                 File file = new File("Chunks/"+FileName+"_"+chunkserverID);
@@ -221,10 +287,14 @@ public class ChunkServer {
             String response = in.readUTF();
             if (response.equals("OK"))
             {System.out.println("The response ok is received ");}
-            soc.close();            
-            new Thread(new ChunkServerListenener(myhostname,myportnum,chunkserverID)).start();
+            soc.close();   
+            new Inventory();
             
-            new Thread(new heartbeats()).start();
+            new Thread(new ChunkServerListenener(myhostname,myportnum,chunkserverID)).start();
+            minorheartbeats Minorheart = new minorheartbeats(conthostname,contportnum,chunkserverID);
+            majorheartbeats Majorheart = new majorheartbeats(conthostname,contportnum,chunkserverID);
+            new Thread(Minorheart).start();
+            new Thread(Majorheart).start();
             
             
             
