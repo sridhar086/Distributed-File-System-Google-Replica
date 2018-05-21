@@ -45,7 +45,7 @@ public class GoogleFileSystem {
         //if (Arr.size() != 0)
         //{c.WriteFileToDS("localhost",9091,Arr);}       
         c.WriteFileToDS("localhost",9091);
-        c.ReadFileFromDS("localhost",9091,"image.jpg");
+        //c.ReadFileFromDS("localhost",9091,"image.jpg");
     }
     
 }

@@ -28,8 +28,12 @@ class Listener implements Runnable {
     public static ServerSocket Serversocket;
     public static Hashtable<Integer,String> hashtable;
        
-    public static String answer(String message)
+    public static void answer(Socket soc)
     {
+        try{
+        DataInputStream in = new DataInputStream(soc.getInputStream());
+        DataOutputStream out = new DataOutputStream(soc.getOutputStream());
+        String message = in.readUTF();     
         String[] args = message.split(" ");
         switch(args[0])
         {
@@ -40,21 +44,37 @@ class Listener implements Runnable {
                 String str2 = hashtable.get(arr.get(1));
                 String str3 = hashtable.get(arr.get(2));
                 String write_str = "OK "+str1+" "+str2+" "+str3;
-                return write_str;
-                //break;
+                out.writeUTF(write_str);
+                //return write_str;
+                break;
             case "MAJORHEARTBEAT":
-                    break;
-            case "MINORHEARTBEAT":
-                    break;
+                System.out.println("Major heartbeat Chunk server ID "+args[1]+" length: "+Integer.parseInt(args[2]));
+                byte[] majorheartbeatbyte = new byte[Integer.parseInt(args[2])];
+                
+                in.readFully(majorheartbeatbyte);
+                String majorheartbeatstring = new String(majorheartbeatbyte, "ISO-8859-1");
+                System.out.println(majorheartbeatstring); 
+                out.writeUTF("OK");
+                break;
+            case "MINORHEARTBEAT":   
+                System.out.println("Minor hearbeat Chunk server ID "+args[1]+" length: "+Integer.parseInt(args[2]));
+                byte[] minorheartbeatbyte = new byte[Integer.parseInt(args[2])];
+                in.readFully(minorheartbeatbyte);
+                String minorheartbeatstring = new String(minorheartbeatbyte, "ISO-8859-1");
+                System.out.println(minorheartbeatstring);
+                out.writeUTF("OK");
+                break;
             case "NEWCHUNKSERVER":
                 String ns_str = args[1]+"/"+args[2];
                 hashtable.put(Integer.parseInt(args[3]), ns_str);
-                return "OK";                
+                out.writeUTF("OK");
+                break;                               
             default:
                 System.out.println("");             
             
         }
-        return "";        
+           
+        }catch(Exception e){}
     }
     
     
@@ -66,10 +86,10 @@ class Listener implements Runnable {
             {
             
             Socket Childsoc = Serversocket.accept();
-            String message = new DataInputStream(Childsoc.getInputStream()).readUTF();
-            String response = answer(message);            
-            new DataOutputStream(Childsoc.getOutputStream()).writeUTF(response);
-            Childsoc.close();
+            answer(Childsoc);
+            Childsoc.close();                    
+            //new DataOutputStream(Childsoc.getOutputStream()).writeUTF(response);
+            //Childsoc.close();
             
             }
         } catch (IOException ex) {

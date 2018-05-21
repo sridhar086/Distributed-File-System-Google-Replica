@@ -49,7 +49,8 @@ class minorheartbeats implements Runnable
     public void run() {
         try
         {
-            Thread.sleep(30000);
+            Thread.sleep(10000);
+            //System.out.println("In minor hearbeat");
             String heartbeatstring = new String();
             heartbeatstring = Inventory.TransferAndSend();
             Socket soc = new Socket(conthostname,contportnum);
@@ -58,9 +59,11 @@ class minorheartbeats implements Runnable
             int heartbeatbytelength = heartbeatstring.getBytes("ISO-8859-1").length;
             byte[] heartbeatbyte = new byte[heartbeatbytelength];
             heartbeatbyte = heartbeatstring.getBytes("ISO-8859-1");
-            
+            System.out.println("MINORHEARTBEAT "+chunkserverID+" "+heartbeatbytelength+" "+heartbeatstring);
             dout.writeUTF("MINORHEARTBEAT "+chunkserverID+" "+heartbeatbytelength);
             dout.write(heartbeatbyte);
+            din.readUTF();
+            soc.close();
             //heartbeatstring
             
         }
@@ -85,8 +88,21 @@ class majorheartbeats implements Runnable
     public void run() {
         try
         {
-            Thread.sleep(300000);
-            
+            Thread.sleep(15000);
+            String heartbeatstring = new String();
+            heartbeatstring = Inventory.Send();
+            Socket soc = new Socket(conthostname,contportnum);
+            DataOutputStream dout = new DataOutputStream(soc.getOutputStream());
+            DataInputStream din = new DataInputStream(soc.getInputStream());
+            int heartbeatbytelength = heartbeatstring.getBytes("ISO-8859-1").length;
+            byte[] heartbeatbyte = new byte[heartbeatbytelength];
+            heartbeatbyte = heartbeatstring.getBytes("ISO-8859-1");
+            System.out.println("MAJORHEARTBEAT "+chunkserverID+" "+heartbeatbytelength+" "+heartbeatstring);
+            dout.writeUTF("MAJORHEARTBEAT "+chunkserverID+" "+heartbeatbytelength);
+            dout.write(heartbeatbyte);
+            din.readUTF();
+            soc.close();           
+           
         }
         catch(Exception e){}     
     }
@@ -96,16 +112,16 @@ class majorheartbeats implements Runnable
 
  class Inventory
  {
-     private static Hashtable<String , Integer> tempInventory;// = new Hashtable<String,Integer>();
-     private static Hashtable<String, Integer> Inventory;// = new Hashtable<String,Integer>();
-     private Object lock1;
+     private static Hashtable<String , Integer> tempInventory = new Hashtable<String,Integer>();
+     private static Hashtable<String, Integer> Inventory = new Hashtable<String,Integer>();
      
+     /*
      public Inventory()
      {
          tempInventory = new Hashtable<String,Integer>();
          Inventory = new Hashtable<String,Integer>();
-         lock1 = new Object();   
-     }    
+
+     } */   
      
      public static void addInventory(String filename)
      {
@@ -119,15 +135,27 @@ class majorheartbeats implements Runnable
      
      public static synchronized String TransferAndSend()
      {
-         String str = new String();
+         StringBuilder str = new StringBuilder();
+         
         for(String key : tempInventory.keySet()) 
         {            
-            Inventory.put(key, tempInventory.get(key));
-            str+=key+" "+tempInventory.get(key)+" ";
-            
+            String Filename = key;
+            int chunk = tempInventory.get(key);            
+            Inventory.put(Filename,chunk);            
+            str.append(Filename+" "+chunk+" ");
         }
-        return str;
-     }    
+        return str.toString();
+     }  
+     public static synchronized String Send()
+     {
+        StringBuilder str = new StringBuilder();
+        
+        for(String key : Inventory.keySet()) 
+        {          
+            str.append(key+" "+Inventory.get(key)+" ");
+        }
+        return str.toString();
+     }
       
  }
 
@@ -288,7 +316,6 @@ public class ChunkServer {
             if (response.equals("OK"))
             {System.out.println("The response ok is received ");}
             soc.close();   
-            new Inventory();
             
             new Thread(new ChunkServerListenener(myhostname,myportnum,chunkserverID)).start();
             minorheartbeats Minorheart = new minorheartbeats(conthostname,contportnum,chunkserverID);
