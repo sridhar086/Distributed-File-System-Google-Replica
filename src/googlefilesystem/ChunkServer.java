@@ -37,12 +37,14 @@ class minorheartbeats implements Runnable
     private String conthostname;
     private int contportnum;
     private int chunkserverID;
+    private Inventory inv;
 
-    public minorheartbeats(String conthostname,int contportnum, int chunkserverID) {
+    public minorheartbeats(String conthostname,int contportnum, int chunkserverID, Inventory inv) {
         this.conthostname = new String();
         this.conthostname = conthostname;
         this.contportnum = contportnum;
         this.chunkserverID = chunkserverID;
+        this.inv = inv;
     }  
     
     @Override
@@ -52,7 +54,7 @@ class minorheartbeats implements Runnable
             Thread.sleep(10000);
             //System.out.println("In minor hearbeat");
             String heartbeatstring = new String();
-            heartbeatstring = Inventory.TransferAndSend();
+            heartbeatstring = inv.TransferAndSend();
             Socket soc = new Socket(conthostname,contportnum);
             DataOutputStream dout = new DataOutputStream(soc.getOutputStream());
             DataInputStream din = new DataInputStream(soc.getInputStream());
@@ -77,12 +79,14 @@ class majorheartbeats implements Runnable
     private String conthostname;
     private int contportnum;
     private int chunkserverID;
+    private Inventory inv;
 
-    public majorheartbeats(String conthostname,int contportnum, int chunkserverID) {
+    public majorheartbeats(String conthostname,int contportnum, int chunkserverID, Inventory inv) {
         this.conthostname = new String();
         this.conthostname = conthostname;
         this.contportnum = contportnum;
         this.chunkserverID = chunkserverID;
+        this.inv = inv;
     }
     @Override
     public void run() {
@@ -90,7 +94,7 @@ class majorheartbeats implements Runnable
         {
             Thread.sleep(15000);
             String heartbeatstring = new String();
-            heartbeatstring = Inventory.Send();
+            heartbeatstring = inv.Send();
             Socket soc = new Socket(conthostname,contportnum);
             DataOutputStream dout = new DataOutputStream(soc.getOutputStream());
             DataInputStream din = new DataInputStream(soc.getInputStream());
@@ -112,41 +116,56 @@ class majorheartbeats implements Runnable
 
  class Inventory
  {
-     private static Hashtable<String , Integer> tempInventory = new Hashtable<String,Integer>();
-     private static Hashtable<String, Integer> Inventory = new Hashtable<String,Integer>();
+     private Hashtable<String , ArrayList<Integer>> tempInventory;// = new Hashtable<String,Integer>();
+     private Hashtable<String, ArrayList<Integer>> Inventory;// = new Hashtable<String,Integer>();
      
-     /*
+     
      public Inventory()
      {
-         tempInventory = new Hashtable<String,Integer>();
-         Inventory = new Hashtable<String,Integer>();
-
-     } */   
-     
-     public static void addInventory(String filename)
+         tempInventory = new Hashtable<String,ArrayList<Integer>>();
+         Inventory = new Hashtable<String,ArrayList<Integer>>();
+     }  
+     /*
+     public void addInventory(String filename)
      {
         Inventory.put(filename.split("_")[0], Integer.parseInt(filename.split("_")[1]));
      } 
-         
-     public static synchronized void addtempInventory(String filename)
+     */    
+     public synchronized void addtempInventory(String filename)
      {
-        tempInventory.put(filename.split("_")[0], Integer.parseInt(filename.split("_")[1]));
+        String key = filename.split("_")[0];
+        int value = Integer.parseInt(filename.split("_")[1]);
+        if (tempInventory.containsKey(key))
+        {
+            ArrayList<Integer> chunks = tempInventory.get(key);
+            chunks.add(value);
+            tempInventory.put(key,chunks);
+        }
+        else
+        {
+            ArrayList<Integer> chunks = new ArrayList<Integer>();
+            chunks.add(value);
+            tempInventory.put(key,chunks);
+        }
+        
+        //System.out.println("Size of tempinventory :"+tempInventory.size());
      }
      
-     public static synchronized String TransferAndSend()
+     public synchronized String TransferAndSend()
      {
          StringBuilder str = new StringBuilder();
          
         for(String key : tempInventory.keySet()) 
         {            
             String Filename = key;
-            int chunk = tempInventory.get(key);            
+            ArrayList<Integer> chunk = new ArrayList<Integer>(); 
+            chunk = tempInventory.get(key);            
             Inventory.put(Filename,chunk);            
             str.append(Filename+" "+chunk+" ");
         }
         return str.toString();
      }  
-     public static synchronized String Send()
+     public synchronized String Send()
      {
         StringBuilder str = new StringBuilder();
         
@@ -166,11 +185,13 @@ class ChunkServerListenener implements Runnable
     private String myhostname;
     private int myportnum;
     private int chunkserverID;
-    public ChunkServerListenener(String myhostname,int myportnum, int chunkserverID)
+    private Inventory inv;
+    public ChunkServerListenener(String myhostname,int myportnum, int chunkserverID, Inventory inv)
     {
         this.myhostname = myhostname;
         this.myportnum = myportnum;
         this.chunkserverID = chunkserverID;
+        this.inv = inv;
     }
     
     public String SHA1FromBytes(byte[] data) 
@@ -211,11 +232,9 @@ class ChunkServerListenener implements Runnable
                 String st = new String(r_byte,"ISO-8859-1");
                 String[] arg = st.split(" ",NumHosts+1);               
                 byte[] wtf = arg[arg.length-1].getBytes("ISO-8859-1");
-                //System.out.println("hashcode "+SHA1FromBytes(wtf));
-                
-                //System.out.println("No of hosts "+NumHosts);
-                
-                Inventory.addtempInventory(FileName);
+                //System.out.println("hashcode "+SHA1FromBytes(wtf));                
+                //System.out.println("No of hosts "+NumHosts);                
+                inv.addtempInventory(FileName);
                 /*saving the file with filename as a chunk*/
                 
                 File file = new File("Chunks/"+FileName+"_"+chunkserverID);
@@ -257,12 +276,9 @@ class ChunkServerListenener implements Runnable
                 
                 break;
             default:
-                System.out.println("");             
-            
-        }
-        
-        }catch(Exception e){}
-        
+                System.out.println("");            
+        }        
+        }catch(Exception e){}        
     }
 
     @Override
@@ -275,9 +291,7 @@ class ChunkServerListenener implements Runnable
             System.out.println("The chunk server is listening on port "+myportnum);
             Socket soc = chunklistener.accept();
             //System.out.println(chunklistener.getLocalSocketAddress().toString());
-            answer(soc);
-            
-            
+            answer(soc);           
         }
         } catch (Exception ex) 
         {//System.out.println("connection closed");
@@ -316,15 +330,12 @@ public class ChunkServer {
             if (response.equals("OK"))
             {System.out.println("The response ok is received ");}
             soc.close();   
-            
-            new Thread(new ChunkServerListenener(myhostname,myportnum,chunkserverID)).start();
-            minorheartbeats Minorheart = new minorheartbeats(conthostname,contportnum,chunkserverID);
-            majorheartbeats Majorheart = new majorheartbeats(conthostname,contportnum,chunkserverID);
+            Inventory inv = new Inventory();
+            new Thread(new ChunkServerListenener(myhostname, myportnum, chunkserverID, inv)).start();
+            minorheartbeats Minorheart = new minorheartbeats(conthostname, contportnum, chunkserverID, inv);
+            majorheartbeats Majorheart = new majorheartbeats(conthostname, contportnum, chunkserverID, inv);
             new Thread(Minorheart).start();
-            new Thread(Majorheart).start();
-            
-            
-            
+            new Thread(Majorheart).start();    
         } catch (IOException ex) {
             
         }
