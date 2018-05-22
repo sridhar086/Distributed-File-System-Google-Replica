@@ -17,6 +17,11 @@ import java.io.OutputStream;
 import java.math.BigInteger;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.UserDefinedFileAttributeView;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -51,6 +56,7 @@ class minorheartbeats implements Runnable
     public void run() {
         try
         {
+            while(true){
             Thread.sleep(10000);
             //System.out.println("In minor hearbeat");
             String heartbeatstring = new String();
@@ -61,12 +67,12 @@ class minorheartbeats implements Runnable
             int heartbeatbytelength = heartbeatstring.getBytes("ISO-8859-1").length;
             byte[] heartbeatbyte = new byte[heartbeatbytelength];
             heartbeatbyte = heartbeatstring.getBytes("ISO-8859-1");
-            System.out.println("MINORHEARTBEAT "+chunkserverID+" "+heartbeatbytelength+" "+heartbeatstring);
+            //System.out.println("MINORHEARTBEAT "+chunkserverID+" "+heartbeatbytelength+" "+heartbeatstring);
             dout.writeUTF("MINORHEARTBEAT "+chunkserverID+" "+heartbeatbytelength);
             dout.write(heartbeatbyte);
             din.readUTF();
             soc.close();
-            //heartbeatstring
+            }
             
         }
         catch(Exception e){}     
@@ -92,6 +98,7 @@ class majorheartbeats implements Runnable
     public void run() {
         try
         {
+            while(true){
             Thread.sleep(15000);
             String heartbeatstring = new String();
             heartbeatstring = inv.Send();
@@ -101,12 +108,12 @@ class majorheartbeats implements Runnable
             int heartbeatbytelength = heartbeatstring.getBytes("ISO-8859-1").length;
             byte[] heartbeatbyte = new byte[heartbeatbytelength];
             heartbeatbyte = heartbeatstring.getBytes("ISO-8859-1");
-            System.out.println("MAJORHEARTBEAT "+chunkserverID+" "+heartbeatbytelength+" "+heartbeatstring);
+            //System.out.println("MAJORHEARTBEAT "+chunkserverID+" "+heartbeatbytelength+" "+heartbeatstring);
             dout.writeUTF("MAJORHEARTBEAT "+chunkserverID+" "+heartbeatbytelength);
             dout.write(heartbeatbyte);
             din.readUTF();
             soc.close();           
-           
+            }
         }
         catch(Exception e){}     
     }
@@ -159,10 +166,11 @@ class majorheartbeats implements Runnable
         {            
             String Filename = key;
             ArrayList<Integer> chunk = new ArrayList<Integer>(); 
-            chunk = tempInventory.get(key);            
+            chunk = tempInventory.get(key);           
             Inventory.put(Filename,chunk);            
             str.append(Filename+" "+chunk+" ");
         }
+        tempInventory.clear();
         return str.toString();
      }  
      public synchronized String Send()
@@ -226,8 +234,7 @@ class ChunkServerListenener implements Runnable
                 //System.out.println("The file name is "+args[2]);
                 int i = in.readInt();
                 byte[] r_byte = new byte[i];
-                in.readFully(r_byte);
-                
+                in.readFully(r_byte);                
                 soc.close();
                 String st = new String(r_byte,"ISO-8859-1");
                 String[] arg = st.split(" ",NumHosts+1);               
@@ -235,10 +242,16 @@ class ChunkServerListenener implements Runnable
                 //System.out.println("hashcode "+SHA1FromBytes(wtf));                
                 //System.out.println("No of hosts "+NumHosts);                
                 inv.addtempInventory(FileName);
+
                 /*saving the file with filename as a chunk*/
                 
-                File file = new File("Chunks/"+FileName+"_"+chunkserverID);
+                File file = new File("Chunks/"+FileName+"_"+chunkserverID);                
                 FileOutputStream Fout = new FileOutputStream(file);
+                /*
+                Path f = Paths.get("Chunks/"+FileName+"_"+chunkserverID);
+                UserDefinedFileAttributeView view = Files.getFileAttributeView(f, UserDefinedFileAttributeView.class);
+                view.write("user.hashcode",SHA1FromBytes(wtf).getBytes("ISO-8859-1"));
+                */
                 Fout.write(wtf);
                 Fout.close();
                 
