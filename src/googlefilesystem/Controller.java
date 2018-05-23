@@ -12,8 +12,10 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -27,6 +29,8 @@ class Listener implements Runnable {
 
     public static ServerSocket Serversocket;
     public static Hashtable<Integer,String> hashtable;
+    
+    //public static Hashtable<String,Hashtable<>>
        
     public static void answer(Socket soc)
     {
@@ -47,6 +51,10 @@ class Listener implements Runnable {
                 out.writeUTF(write_str);
                 //return write_str;
                 break;
+                
+            case "READREQUEST":
+                
+                break;
             case "MAJORHEARTBEAT":
                 System.out.println("Major heartbeat Chunk server ID "+args[1]+" length: "+Integer.parseInt(args[2]));
                 byte[] majorheartbeatbyte = new byte[Integer.parseInt(args[2])];
@@ -62,6 +70,11 @@ class Listener implements Runnable {
                 in.readFully(minorheartbeatbyte);
                 String minorheartbeatstring = new String(minorheartbeatbyte, "ISO-8859-1");
                 System.out.println(minorheartbeatstring);
+                String f = minorheartbeatstring.split(" ",2)[0];
+                String chunklist = minorheartbeatstring.split(" ",2)[1].trim();
+                //System.out.println(chunklist.substring(1, chunklist.length()-1));
+                List<String> myList = new ArrayList<String>(Arrays.asList(chunklist.substring(1, chunklist.length()-1).split(",")));
+                System.out.println(myList);
                 out.writeUTF("OK");
                 break;
             case "NEWCHUNKSERVER":

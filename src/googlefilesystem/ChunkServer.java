@@ -33,6 +33,18 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.net.ssl.SSLSocket;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
+
 /**
  *
  * @author sridhar
@@ -215,6 +227,33 @@ class ChunkServerListenener implements Runnable
             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
             return "";
         }
+    }  
+    
+    
+     public void createxml(String FileName,int chunkserverID,String hashcode)
+    {        
+        try {
+        DocumentBuilderFactory dbFactory =
+        DocumentBuilderFactory.newInstance();
+        DocumentBuilder dBuilder;
+        dBuilder = dbFactory.newDocumentBuilder();
+        Document doc = dBuilder.newDocument();
+        Element rootElement = doc.createElement(FileName+"_"+chunkserverID);
+        doc.appendChild(rootElement);
+        
+        Element Hash = doc.createElement("HashCode");
+        Hash.appendChild(doc.createTextNode(hashcode));
+        rootElement.appendChild(Hash);
+
+        
+        TransformerFactory transformerFactory = TransformerFactory.newInstance();
+        Transformer transformer = transformerFactory.newTransformer();
+        DOMSource source = new DOMSource(doc);
+        StreamResult result = new StreamResult(new File("Chunks/"+FileName+"_"+chunkserverID+".xml"));
+        transformer.transform(source, result); 
+        } catch (Exception ex) {
+            Logger.getLogger(ChunkServerListenener.class.getName()).log(Level.SEVERE, null, ex);
+        }        
     }
       
     public void answer(Socket soc)
@@ -242,18 +281,15 @@ class ChunkServerListenener implements Runnable
                 //System.out.println("hashcode "+SHA1FromBytes(wtf));                
                 //System.out.println("No of hosts "+NumHosts);                
                 inv.addtempInventory(FileName);
+                createxml(FileName, chunkserverID, SHA1FromBytes(wtf));
 
                 /*saving the file with filename as a chunk*/
                 
                 File file = new File("Chunks/"+FileName+"_"+chunkserverID);                
-                FileOutputStream Fout = new FileOutputStream(file);
-                /*
-                Path f = Paths.get("Chunks/"+FileName+"_"+chunkserverID);
-                UserDefinedFileAttributeView view = Files.getFileAttributeView(f, UserDefinedFileAttributeView.class);
-                view.write("user.hashcode",SHA1FromBytes(wtf).getBytes("ISO-8859-1"));
-                */
+                FileOutputStream Fout = new FileOutputStream(file);               
                 Fout.write(wtf);
                 Fout.close();
+                
                 
                 
                 if (NumHosts != 0)

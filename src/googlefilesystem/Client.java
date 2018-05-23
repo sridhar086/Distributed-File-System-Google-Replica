@@ -70,6 +70,29 @@ public class Client {
         
     }
     
+    public void ReadRequest(String ControllerHost, int ControllerPort, String filename)
+    {
+        try {
+        Socket socket = new Socket();
+        InetAddress addr = InetAddress.getByName(ControllerHost);
+        SocketAddress sockaddr = new InetSocketAddress(addr, ControllerPort);
+        socket.connect(sockaddr);
+        DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+        DataInputStream in = new DataInputStream(socket.getInputStream());
+        out.writeUTF("READREQUEST "+filename);
+        
+            
+            
+        } catch (Exception ex) {
+            System.out.println("Exception in Client.java WriteRequest");           
+            
+                        
+        } 
+        
+        
+    }
+    
+    
     private void Write(String c_write, String cserver1, String FileName, int chunkseq)//, int NumChunks, boolean flag)
     {
         
@@ -101,9 +124,9 @@ public class Client {
         
     }
     
-    public void WriteFileToDS(String ControllerHost, int ControllerPort)
+    public void WriteFileToDS(String ControllerHost, int ControllerPort, String filename)
     {      
-        this.ReadFile(ControllerHost, ControllerPort);      
+        this.ReadFile(ControllerHost, ControllerPort, filename);      
     }
     
     public byte[] deepcopy(byte[] arr, int length)
@@ -133,10 +156,10 @@ public class Client {
     
     
     
-    public void ReadFile(String ControllerHost, int ControllerPort)
+    public void ReadFile(String ControllerHost, int ControllerPort, String filename)
     {       
         try {
-            File file = new File("TestFiles/image.jpg");
+            File file = new File(filename);
             FileInputStream is = new FileInputStream(file);
             
             //System.out.println("The size of file is "+);
@@ -179,6 +202,7 @@ public class Client {
     
     public void ReadFileFromDS(String ControllerHost, int ControllerPort, String FileName)
     {
+        this.ReadRequest(ControllerHost, ControllerPort, FileName);       
         
     }
     
