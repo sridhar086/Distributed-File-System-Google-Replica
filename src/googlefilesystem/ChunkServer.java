@@ -180,7 +180,7 @@ class majorheartbeats implements Runnable
             ArrayList<Integer> chunk = new ArrayList<Integer>(); 
             chunk = tempInventory.get(key);           
             Inventory.put(Filename,chunk);            
-            str.append(Filename+" "+chunk+" ");
+            str.append(Filename+" "+chunk+"__*__");
         }
         tempInventory.clear();
         return str.toString();
@@ -191,7 +191,7 @@ class majorheartbeats implements Runnable
         
         for(String key : Inventory.keySet()) 
         {          
-            str.append(key+" "+Inventory.get(key)+" ");
+            str.append(key+" "+Inventory.get(key)+"__*__");
         }
         return str.toString();
      }
