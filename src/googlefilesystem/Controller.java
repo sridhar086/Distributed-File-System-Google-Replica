@@ -53,6 +53,7 @@ class Listener implements Runnable {
                 
             case "READREQUEST":
                 
+                
                 break;
             case "MAJORHEARTBEAT":
                 System.out.println("Major heartbeat Chunk server ID "+args[1]+" length: "+Integer.parseInt(args[2]));
@@ -173,7 +174,8 @@ class Listener implements Runnable {
             
             Socket Childsoc = Serversocket.accept();
             answer(Childsoc);
-            Childsoc.close();                    
+            Childsoc.close(); 
+            
             //new DataOutputStream(Childsoc.getOutputStream()).writeUTF(response);
             //Childsoc.close();
             
