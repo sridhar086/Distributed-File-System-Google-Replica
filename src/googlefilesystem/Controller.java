@@ -6,9 +6,15 @@
 package googlefilesystem;
 
 import static googlefilesystem.Listener.hashtable;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -30,12 +36,29 @@ class Listener implements Runnable {
     public static ServerSocket Serversocket;
     public static Hashtable<Integer,String> hashtable;    
     public static Hashtable<String,Hashtable<Integer,ArrayList<Integer>>> filemap = new Hashtable<String,Hashtable<Integer,ArrayList<Integer>>>();
-       
+    
+    
+    public static byte[] serialize(Object obj) throws IOException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        ObjectOutputStream os = new ObjectOutputStream(out);
+        os.writeObject(obj);
+        return out.toByteArray();
+    }
+    public static Object deserialize(byte[] data) throws IOException, ClassNotFoundException {
+        ByteArrayInputStream in = new ByteArrayInputStream(data);
+        ObjectInputStream is = new ObjectInputStream(in);
+        return is.readObject();
+    }   
+    
+    
     public static void answer(Socket soc)
     {
         try{
-        DataInputStream in = new DataInputStream(soc.getInputStream());
-        DataOutputStream out = new DataOutputStream(soc.getOutputStream());
+        InputStream inp = soc.getInputStream();
+        OutputStream outp = soc.getOutputStream();
+        DataInputStream in = new DataInputStream(inp);
+        DataOutputStream out = new DataOutputStream(outp);
+               
         String message = in.readUTF();     
         String[] args = message.split(" ");
         switch(args[0])
@@ -46,14 +69,22 @@ class Listener implements Runnable {
                 String str1 = hashtable.get(arr.get(0));
                 String str2 = hashtable.get(arr.get(1));
                 String str3 = hashtable.get(arr.get(2));
-                String write_str = "OK "+str1+" "+str2+" "+str3;
+                String write_str = "OK "+str1+" "+str2+" "+str3;                
                 out.writeUTF(write_str);
                 //return write_str;
                 break;
                 
             case "READREQUEST":
-                
-                
+                System.out.println("THE FILENAME FOUND OUT IS  "+args[1]);
+                if (filemap.containsKey(args[1]))
+                {
+                    Hashtable<Integer,ArrayList<Integer>> chunktochunkserverID = new Hashtable<Integer,ArrayList<Integer>>();
+                    chunktochunkserverID = filemap.get(args[1]);                    
+                    byte[] readrequest = serialize(chunktochunkserverID);
+                    System.out.println("length is "+readrequest.length);
+                    out.writeInt(readrequest.length);
+                    out.write(readrequest);
+                }                
                 break;
             case "MAJORHEARTBEAT":
                 System.out.println("Major heartbeat Chunk server ID "+args[1]+" length: "+Integer.parseInt(args[2]));
@@ -61,12 +92,14 @@ class Listener implements Runnable {
                 
                 in.readFully(majorheartbeatbyte);
                 String majorheartbeatstring = new String(majorheartbeatbyte, "ISO-8859-1");
-                System.out.println(majorheartbeatstring); 
+                System.out.println(majorheartbeatstring);                
                 out.writeUTF("OK");
                 break;
             case "MINORHEARTBEAT":   
                 System.out.println("Minor hearbeat Chunk server ID "+args[1]+" length: "+Integer.parseInt(args[2]));
                 int chunkserverID = Integer.parseInt(args[1]);
+                if(Integer.parseInt(args[2]) != 0)
+                {
                 byte[] minorheartbeatbyte = new byte[Integer.parseInt(args[2])];
                 in.readFully(minorheartbeatbyte);
                 String minorheartbeatstring = new String(minorheartbeatbyte, "ISO-8859-1");
@@ -84,10 +117,12 @@ class Listener implements Runnable {
                     //System.out.println(chunklist.substring(1, chunklist.length()-1));
                     List<String> myList = new ArrayList<String>(Arrays.asList(chunklist.substring(1, chunklist.length()-1).split(",")));
                     addtofilemap(f,myList,chunkserverID);
-                System.out.println(myList);
+                    System.out.println(myList);
                 }
                 out.writeUTF("OK");
                 //printfilemap();
+                }
+                
                 break;
             case "NEWCHUNKSERVER":
                 String ns_str = args[1]+"/"+args[2];
@@ -95,10 +130,8 @@ class Listener implements Runnable {
                 out.writeUTF("OK");
                 break;                               
             default:
-                System.out.println("");             
-            
-        }
-           
+                System.out.println("");            
+        }           
         }catch(Exception e){System.out.println(e.toString());}
     }
 
@@ -117,10 +150,8 @@ class Listener implements Runnable {
                     System.out.println("File Name: "+str+" Chunk No: "+chunk+" Chunkserver ID:"+ID);
                 }
             }
-        }
-    
-    }
-    
+        }    
+    }    
     
     private static void addtofilemap(String f, List<String> myList, int chunkserverID) 
     {

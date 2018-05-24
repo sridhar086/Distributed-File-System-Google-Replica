@@ -5,6 +5,8 @@
  */
 package googlefilesystem;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
@@ -13,6 +15,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.math.BigInteger;
 import java.net.InetAddress;
@@ -22,6 +26,7 @@ import java.net.SocketAddress;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -70,6 +75,21 @@ public class Client {
         
     }
     
+    public byte[] serialize(Object obj) throws IOException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        ObjectOutputStream os = new ObjectOutputStream(out);
+        os.writeObject(obj);
+        return out.toByteArray();
+    }
+    public Object deserialize(byte[] data) throws IOException, ClassNotFoundException {
+        ByteArrayInputStream in = new ByteArrayInputStream(data);
+        ObjectInputStream is = new ObjectInputStream(in);
+        return is.readObject();
+    }   
+
+    
+    
+    
     public void ReadRequest(String ControllerHost, int ControllerPort, String filename)
     {
         try {
@@ -77,14 +97,32 @@ public class Client {
         InetAddress addr = InetAddress.getByName(ControllerHost);
         SocketAddress sockaddr = new InetSocketAddress(addr, ControllerPort);
         socket.connect(sockaddr);
-        DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-        DataInputStream in = new DataInputStream(socket.getInputStream());
-        out.writeUTF("READREQUEST "+filename);
+        InputStream inp = socket.getInputStream();
+        OutputStream outp = socket.getOutputStream();
+        DataOutputStream out = new DataOutputStream(outp);
+        DataInputStream in = new DataInputStream(inp);        
         
-            
+        out.writeUTF("READREQUEST "+filename);
+        int length = in.readInt();
+        byte[] readrequestresponse = new byte[length];
+        in.readFully(readrequestresponse);
+        Hashtable<Integer,ArrayList<Integer>> chunktochunkserverID = new Hashtable<Integer,ArrayList<Integer>>();
+        chunktochunkserverID = (Hashtable<Integer, ArrayList<Integer>>) this.deserialize(readrequestresponse);
+        
+
+        
+        for(int chunk:chunktochunkserverID.keySet())
+            {
+                ArrayList<Integer> chunkserverIDs = new ArrayList<Integer>();
+                chunkserverIDs = chunktochunkserverID.get(chunk);
+                for (int ID: chunkserverIDs)
+                {
+                    System.out.println("Chunk No: "+chunk+" Chunkserver ID:"+ID);
+                }
+            }      
             
         } catch (Exception ex) {
-            System.out.println("Exception in Client.java WriteRequest");           
+            System.out.println("Exception in Client.java "+ex.toString());           
             
                         
         } 
@@ -100,7 +138,7 @@ public class Client {
             String[] arg = cserver1.split("/");
             System.out.println("write from client to "+arg[0]+" "+arg[1]);
             Socket writesocket = new Socket(arg[0], Integer.parseInt(arg[1]));
-            DataOutputStream out = new DataOutputStream(writesocket.getOutputStream());
+            DataOutputStream out = new DataOutputStream(writesocket.getOutputStream());            
             DataInputStream in = new DataInputStream(writesocket.getInputStream());
             byte[] sent_byte  = c_write.getBytes("ISO-8859-1");
             out.writeUTF("WRITE 2 "+FileName+"_"+chunkseq);

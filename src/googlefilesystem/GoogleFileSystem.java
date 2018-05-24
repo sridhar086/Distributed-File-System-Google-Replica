@@ -31,21 +31,20 @@ public class GoogleFileSystem {
         ChunkServer cs2 = new ChunkServer(cs_args2);
         Thread.sleep(500);
         ChunkServer cs3 = new ChunkServer(cs_args3);
-        Thread.sleep(500);
         
-        
-            Thread.sleep(2000);
-        } catch (InterruptedException ex) {
-            Logger.getLogger(GoogleFileSystem.class.getName()).log(Level.SEVERE, null, ex);
-        }        
-        
+        Thread.sleep(2500);      
+            
         Client c = new Client();
         //ArrayList<String> Arr = new ArrayList<String>();
         //Arr = c.WriteRequest("localhost",9091);
         //if (Arr.size() != 0)
         //{c.WriteFileToDS("localhost",9091,Arr);}       
         c.WriteFileToDS("localhost",9091,"TestFiles/image.jpg");
+        
+        Thread.sleep(10000);
         c.ReadFileFromDS("localhost",9091,"image.jpg");
-    }
-    
+        } catch (InterruptedException ex) {
+            Logger.getLogger(GoogleFileSystem.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }   
 }
