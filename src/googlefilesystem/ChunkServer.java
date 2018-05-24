@@ -9,6 +9,7 @@ import static googlefilesystem.Listener.hashtable;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -313,15 +314,19 @@ class ChunkServerListenener implements Runnable
                     in.readUTF();
                         }catch(Exception e){}
                     }
-                }).start();
-                
+                }).start();                
                 }
-                Thread.sleep(100);
-                
-                
+                Thread.sleep(100);      
                 break;               
                
             case "READ":
+                //System.out.println("The filename is "+args[1]);                
+                File readfile = new File("Chunks/"+args[1]+"_"+chunkserverID);
+                FileInputStream Fin = new FileInputStream(readfile);
+                byte[] readfilebytes = new byte[(int)readfile.length()];
+                Fin.read(readfilebytes);
+                out.writeInt((int)readfile.length());
+                out.write(readfilebytes);              
                 
                 break;
             default:

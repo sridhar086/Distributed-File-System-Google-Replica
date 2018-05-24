@@ -26,7 +26,9 @@ import java.net.SocketAddress;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -106,29 +108,51 @@ public class Client {
         int length = in.readInt();
         byte[] readrequestresponse = new byte[length];
         in.readFully(readrequestresponse);
-        Hashtable<Integer,ArrayList<Integer>> chunktochunkserverID = new Hashtable<Integer,ArrayList<Integer>>();
-        chunktochunkserverID = (Hashtable<Integer, ArrayList<Integer>>) this.deserialize(readrequestresponse);
+        Hashtable<Integer,ArrayList<String>> chunktochunkserverID = new Hashtable<Integer,ArrayList<String>>();
+        chunktochunkserverID = (Hashtable<Integer, ArrayList<String>>) this.deserialize(readrequestresponse);
         
-
-        
-        for(int chunk:chunktochunkserverID.keySet())
+        List<Integer> chunklist = new ArrayList(chunktochunkserverID.keySet());
+        Collections.sort(chunklist);
+        ArrayList<byte[]> bytearray = new ArrayList<byte[]>();
+        for(int chunkseq:chunklist)
             {
-                ArrayList<Integer> chunkserverIDs = new ArrayList<Integer>();
-                chunkserverIDs = chunktochunkserverID.get(chunk);
-                for (int ID: chunkserverIDs)
-                {
-                    System.out.println("Chunk No: "+chunk+" Chunkserver ID:"+ID);
-                }
-            }      
-            
+                ArrayList<String> chunkserverIDs = new ArrayList<String>();
+                chunkserverIDs = chunktochunkserverID.get(chunkseq);
+                
+                Collections.shuffle(chunkserverIDs);
+                String chunkserverhost = chunkserverIDs.get(0);
+                //System.out.println("The chunk "+chunk+" will be obtained from "+chunkserverhost);
+                byte[] bytes = Read(filename,chunkseq,chunkserverhost);
+                System.out.println("the size of bytes us "+bytes.length);
+                bytearray.add(bytes);
+                
+            }       
+        
         } catch (Exception ex) {
-            System.out.println("Exception in Client.java "+ex.toString());           
-            
-                        
-        } 
-        
-        
+            System.out.println("Exception in Client.java "+ex.toString());                        
+        }        
     }
+    
+    private byte[] Read(String filename, int chunkseq, String chunkserverhost)         
+    {            
+        try{
+            String chunkhost = chunkserverhost.split("/")[0];
+            int chunkport = Integer.parseInt(chunkserverhost.split("/")[1]);
+            Socket readsocket = new Socket(chunkhost, chunkport);
+            DataInputStream din = new DataInputStream( readsocket.getInputStream());
+            DataOutputStream dout = new DataOutputStream(readsocket.getOutputStream());            
+            dout.writeUTF("READ "+filename+"_"+chunkseq);            
+            byte[] readbyte = new byte[din.readInt()];
+            din.readFully(readbyte);
+            return readbyte;
+            //din.readInt();
+                
+        }catch(Exception ex){
+            return new byte[0];
+                
+        }       
+    }
+
     
     
     private void Write(String c_write, String cserver1, String FileName, int chunkseq)//, int NumChunks, boolean flag)
@@ -146,8 +170,7 @@ public class Client {
             if (flag == false){
             out.writeUTF("WRITE "+NumChunks);
             //int length = sent_byte.length;
-            //out.writeInt(length);
-            
+            //out.writeInt(length);            
             }*/
             out.writeInt(sent_byte.length);
             out.write(sent_byte);
@@ -251,6 +274,8 @@ public class Client {
         
               
     }
+
+
     
     
     

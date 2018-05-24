@@ -35,7 +35,7 @@ class Listener implements Runnable {
 
     public static ServerSocket Serversocket;
     public static Hashtable<Integer,String> hashtable;    
-    public static Hashtable<String,Hashtable<Integer,ArrayList<Integer>>> filemap = new Hashtable<String,Hashtable<Integer,ArrayList<Integer>>>();
+    public static Hashtable<String,Hashtable<Integer,ArrayList<String>>> filemap = new Hashtable<String,Hashtable<Integer,ArrayList<String>>>();
     
     
     public static byte[] serialize(Object obj) throws IOException {
@@ -69,7 +69,7 @@ class Listener implements Runnable {
                 String str1 = hashtable.get(arr.get(0));
                 String str2 = hashtable.get(arr.get(1));
                 String str3 = hashtable.get(arr.get(2));
-                String write_str = "OK "+str1+" "+str2+" "+str3;                
+                String write_str = "OK "+str1+" "+str2+" "+str3;
                 out.writeUTF(write_str);
                 //return write_str;
                 break;
@@ -78,18 +78,17 @@ class Listener implements Runnable {
                 System.out.println("THE FILENAME FOUND OUT IS  "+args[1]);
                 if (filemap.containsKey(args[1]))
                 {
-                    Hashtable<Integer,ArrayList<Integer>> chunktochunkserverID = new Hashtable<Integer,ArrayList<Integer>>();
+                    Hashtable<Integer,ArrayList<String>> chunktochunkserverID = new Hashtable<Integer,ArrayList<String>>();
                     chunktochunkserverID = filemap.get(args[1]);                    
                     byte[] readrequest = serialize(chunktochunkserverID);
                     System.out.println("length is "+readrequest.length);
                     out.writeInt(readrequest.length);
                     out.write(readrequest);
-                }                
+                }
                 break;
             case "MAJORHEARTBEAT":
                 System.out.println("Major heartbeat Chunk server ID "+args[1]+" length: "+Integer.parseInt(args[2]));
-                byte[] majorheartbeatbyte = new byte[Integer.parseInt(args[2])];
-                
+                byte[] majorheartbeatbyte = new byte[Integer.parseInt(args[2])];                
                 in.readFully(majorheartbeatbyte);
                 String majorheartbeatstring = new String(majorheartbeatbyte, "ISO-8859-1");
                 System.out.println(majorheartbeatstring);                
@@ -139,13 +138,13 @@ class Listener implements Runnable {
     {
         for(String str: filemap.keySet())
         {
-            Hashtable<Integer,ArrayList<Integer>> chunktochunkserverID = new Hashtable<Integer,ArrayList<Integer>>();
+            Hashtable<Integer,ArrayList<String>> chunktochunkserverID = new Hashtable<Integer,ArrayList<String>>();
             chunktochunkserverID = filemap.get(str);
             for(int chunk:chunktochunkserverID.keySet())
             {
-                ArrayList<Integer> chunkserverIDs = new ArrayList<Integer>();
+                ArrayList<String> chunkserverIDs = new ArrayList<String>();
                 chunkserverIDs = chunktochunkserverID.get(chunk);
-                for (int ID: chunkserverIDs)
+                for (String ID: chunkserverIDs)
                 {
                     System.out.println("File Name: "+str+" Chunk No: "+chunk+" Chunkserver ID:"+ID);
                 }
@@ -157,7 +156,7 @@ class Listener implements Runnable {
     {
         if (filemap.containsKey(f))
         {
-            Hashtable<Integer,ArrayList<Integer>> chunktochunkserverID = new Hashtable<Integer,ArrayList<Integer>>();
+            Hashtable<Integer,ArrayList<String>> chunktochunkserverID = new Hashtable<Integer,ArrayList<String>>();
             chunktochunkserverID = filemap.get(f);
             
             for (String rawstr: myList)
@@ -166,28 +165,31 @@ class Listener implements Runnable {
                 str = rawstr.trim();
                 if(chunktochunkserverID.containsKey(Integer.parseInt(str)))
                 {
-                    ArrayList<Integer> chunkserverIDlist = new ArrayList<Integer>();
+                    ArrayList<String> chunkserverIDlist = new ArrayList<String>();
                     chunkserverIDlist = chunktochunkserverID.get(Integer.parseInt(str));
-                    chunkserverIDlist.add(chunkserverID);
+                    String chunkserverhost = hashtable.get(chunkserverID);
+                    chunkserverIDlist.add(chunkserverhost);
                     chunktochunkserverID.put(Integer.parseInt(str), chunkserverIDlist);
                 }
                 else
                 {
-                    ArrayList<Integer> chunkserverIDlist = new ArrayList<Integer>();
-                    chunkserverIDlist.add(chunkserverID);
+                    ArrayList<String> chunkserverIDlist = new ArrayList<String>();
+                    String chunkserverhost = hashtable.get(chunkserverID);
+                    chunkserverIDlist.add(chunkserverhost);
                     chunktochunkserverID.put(Integer.parseInt(str), chunkserverIDlist);
                 }
             }
         }
         else{
         
-        Hashtable<Integer,ArrayList<Integer>> chunktochunkserverID = new Hashtable<Integer,ArrayList<Integer>>();
+        Hashtable<Integer,ArrayList<String>> chunktochunkserverID = new Hashtable<Integer,ArrayList<String>>();
         for(String rawstr:myList)
         {
             String str = new String();
             str = rawstr.trim();
-            ArrayList<Integer> chunkserverIDlist = new ArrayList<Integer>();
-            chunkserverIDlist.add(chunkserverID);
+            ArrayList<String> chunkserverIDlist = new ArrayList<String>();
+            String chunkserverhost = hashtable.get(chunkserverID);
+            chunkserverIDlist.add(chunkserverhost);
             chunktochunkserverID.put(Integer.parseInt(str),chunkserverIDlist);
         }
         filemap.put(f, chunktochunkserverID);
