@@ -13,6 +13,7 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -113,7 +114,9 @@ public class Client {
         
         List<Integer> chunklist = new ArrayList(chunktochunkserverID.keySet());
         Collections.sort(chunklist);
-        ArrayList<byte[]> bytearray = new ArrayList<byte[]>();
+        //ArrayList<byte[]> bytearray = new ArrayList<byte[]>();
+        File returnedfile = new File("TestFiles/"+"DFS"+filename);
+        FileOutputStream returnedfout = new FileOutputStream(returnedfile);
         for(int chunkseq:chunklist)
             {
                 ArrayList<String> chunkserverIDs = new ArrayList<String>();
@@ -124,9 +127,11 @@ public class Client {
                 //System.out.println("The chunk "+chunk+" will be obtained from "+chunkserverhost);
                 byte[] bytes = Read(filename,chunkseq,chunkserverhost);
                 System.out.println("the size of bytes us "+bytes.length);
-                bytearray.add(bytes);
+                //bytearray.add(bytes);
+                returnedfout.write(bytes);
                 
-            }       
+            }
+        returnedfout.close();
         
         } catch (Exception ex) {
             System.out.println("Exception in Client.java "+ex.toString());                        
