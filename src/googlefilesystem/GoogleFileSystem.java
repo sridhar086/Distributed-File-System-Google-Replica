@@ -42,7 +42,7 @@ public class GoogleFileSystem {
         c.WriteFileToDS("localhost",9091,"TestFiles/image.jpg");
         
         Thread.sleep(10000);
-        c.ReadFileFromDS("localhost",9091,"image.jpg");
+        //c.ReadFileFromDS("localhost",9091,"image.jpg");
         } catch (InterruptedException ex) {
             Logger.getLogger(GoogleFileSystem.class.getName()).log(Level.SEVERE, null, ex);
         }

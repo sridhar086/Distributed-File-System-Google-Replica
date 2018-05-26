@@ -126,7 +126,7 @@ public class Client {
                 String chunkserverhost = chunkserverIDs.get(0);
                 //System.out.println("The chunk "+chunk+" will be obtained from "+chunkserverhost);
                 byte[] bytes = Read(filename,chunkseq,chunkserverhost);
-                System.out.println("the size of bytes us "+bytes.length);
+                //System.out.println("the size of bytes us "+bytes.length);
                 //bytearray.add(bytes);
                 returnedfout.write(bytes);
                 

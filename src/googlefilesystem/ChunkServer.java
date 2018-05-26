@@ -44,6 +44,7 @@ import javax.xml.transform.stream.StreamResult;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 
 
 /**
@@ -131,6 +132,95 @@ class majorheartbeats implements Runnable
         catch(Exception e){}     
     }
     
+}
+
+class ChunkChecker implements Runnable
+{
+    int chunkserverID;
+    String conthostname;
+    int contportnum;
+            
+
+    public ChunkChecker(String conthostname, int contportnum, int chunkserverID) {
+        this.chunkserverID = chunkserverID;
+        this.conthostname = conthostname;
+        this.contportnum = contportnum;
+    }
+    
+    
+    public String SHA1FromBytes(byte[] data)
+    {  
+        try 
+        {            
+            MessageDigest digest;
+            digest = MessageDigest.getInstance("SHA1");
+            byte[] hash = digest.digest(data);
+            BigInteger hashInt = new BigInteger(1, hash);
+            return hashInt.toString(16);
+        } catch (NoSuchAlgorithmException ex) {
+            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+            return "";
+        }
+    } 
+    
+
+    @Override
+    public void run() 
+    {
+        try
+        {
+            while(true)
+            {
+                //System.out.println("THE CHUNK CHECKING IS TRYING TO EXECUTE");
+                Thread.sleep(15000);
+                //System.out.println("THE CHUNK CHECKING IS TRYING TO EXECUTE 2");
+                File dir = new File("Chunks/");
+                File[] directoryListing = dir.listFiles();
+                //System.out.println("The no of files in listdirectory is "+directoryListing.length);
+                if (directoryListing != null) 
+                {
+                    for (File child : directoryListing) 
+                    {                       
+                        if(child.toString().endsWith("_"+chunkserverID))
+                        {
+                            //System.out.println("The name of the file is "+child.toString()+".xml");
+                            File filexml = new File(child.toString()+".xml");                            
+                            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+                            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+                            Document doc = dBuilder.parse(filexml);
+                            Node n = doc.getFirstChild();
+                            //System.out.println(n.getTextContent());
+                            File file = new File(child.toString());
+                            FileInputStream Fin = new FileInputStream(file);
+                            byte[] readfilebytes = new byte[(int)file.length()];
+                            Fin.read(readfilebytes);
+                            if(SHA1FromBytes(readfilebytes).equals(n.getTextContent()))
+                            {
+                                //System.out.println("The hashcode is matching");
+                            
+                            }
+                            else
+                            {
+                                //System.out.println("the hashcode didnt match for "+child.toString());
+                                Socket soc = new Socket(conthostname, contportnum);
+                                DataOutputStream dout = new DataOutputStream(soc.getOutputStream());
+                                DataInputStream din = new DataInputStream(soc.getInputStream());
+                                String[] args = file.toString().split("_");
+                                dout.writeUTF("CHUNKRETRIEVAL "+args[0]+"_"+args[1]+" "+chunkserverID);                       
+                                
+                            }
+                            
+                            
+                            
+                            
+                        }
+
+                    }
+                } 
+            }
+    
+        }catch(Exception e){System.out.println("The exception is "+e.toString());}
+    }
 }
 
 
@@ -389,7 +479,10 @@ public class ChunkServer {
             minorheartbeats Minorheart = new minorheartbeats(conthostname, contportnum, chunkserverID, inv);
             majorheartbeats Majorheart = new majorheartbeats(conthostname, contportnum, chunkserverID, inv);
             new Thread(Minorheart).start();
-            new Thread(Majorheart).start();    
+            new Thread(Majorheart).start(); 
+            ChunkChecker chunkchecker = new ChunkChecker(conthostname,contportnum, chunkserverID);
+            new Thread(chunkchecker).start();
+        
         } catch (IOException ex) {
             
         }

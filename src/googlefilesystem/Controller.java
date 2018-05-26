@@ -10,6 +10,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -127,7 +128,33 @@ class Listener implements Runnable {
                 String ns_str = args[1]+"/"+args[2];
                 hashtable.put(Integer.parseInt(args[3]), ns_str);
                 out.writeUTF("OK");
-                break;                               
+                break; 
+            case "CHUNKRETRIEVAL":
+                String checkfile= args[1]; //args[1] starts with this filename
+                String chunkserverIDcheck = args[2];
+                String checkfilename = checkfile.split("_")[0];
+                int checkfilechunk = Integer.parseInt(checkfile.split("_")[1]);
+                ArrayList<String> hostnames = new ArrayList<String>();
+                hostnames = filemap.get(checkfilename).get(checkfilechunk);
+                  
+                
+                /*File dir = new File("Chunks/");
+                File[] directoryListing = dir.listFiles();                
+                if (directoryListing != null)
+                {
+                    for (File child : directoryListing) 
+                    {
+                        
+                        
+                        if(child.toString().startsWith(checkfile) && !child.toString().endsWith(chunkserverIDcheck) && !child.toString().endsWith(chunkserverIDcheck+".xml"))
+                        {
+                            System.out.println("The files found out are "+child.toString());
+                        }
+                                
+                        
+                    }
+                }*/
+                break;
             default:
                 System.out.println("");            
         }           
