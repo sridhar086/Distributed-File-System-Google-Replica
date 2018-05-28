@@ -88,22 +88,22 @@ class Listener implements Runnable {
                 }
                 break;
             case "MAJORHEARTBEAT":
-                System.out.println("Major heartbeat Chunk server ID "+args[1]+" length: "+Integer.parseInt(args[2]));
+                //System.out.println("Major heartbeat Chunk server ID "+args[1]+" length: "+Integer.parseInt(args[2]));
                 byte[] majorheartbeatbyte = new byte[Integer.parseInt(args[2])];                
                 in.readFully(majorheartbeatbyte);
                 String majorheartbeatstring = new String(majorheartbeatbyte, "ISO-8859-1");
-                System.out.println(majorheartbeatstring);                
+                //System.out.println(majorheartbeatstring);
                 out.writeUTF("OK");
                 break;
             case "MINORHEARTBEAT":   
-                System.out.println("Minor hearbeat Chunk server ID "+args[1]+" length: "+Integer.parseInt(args[2]));
+                //System.out.println("Minor hearbeat Chunk server ID "+args[1]+" length: "+Integer.parseInt(args[2]));
                 int chunkserverID = Integer.parseInt(args[1]);
                 if(Integer.parseInt(args[2]) != 0)
                 {
                 byte[] minorheartbeatbyte = new byte[Integer.parseInt(args[2])];
                 in.readFully(minorheartbeatbyte);
                 String minorheartbeatstring = new String(minorheartbeatbyte, "ISO-8859-1");
-                System.out.println(minorheartbeatstring);
+                //System.out.println(minorheartbeatstring);
                 String[] minorheartbeats = minorheartbeatstring.split("__*__");
                 //System.out.println(minorheartbeats);
                 List<String> filelist = new ArrayList<String>(Arrays.asList(minorheartbeats));
@@ -113,15 +113,16 @@ class Listener implements Runnable {
                     String f = file.split(" ",2)[0];
                     String chunklist = minorheartbeatstring.split(" ",2)[1].trim();
                     chunklist = chunklist.replace("__*__", "");
-                    System.out.println(chunklist);
+                    //System.out.println(chunklist);
                     //System.out.println(chunklist.substring(1, chunklist.length()-1));
                     List<String> myList = new ArrayList<String>(Arrays.asList(chunklist.substring(1, chunklist.length()-1).split(",")));
                     addtofilemap(f,myList,chunkserverID);
-                    System.out.println(myList);
+                    //System.out.println(myList);
                 }
-                out.writeUTF("OK");
+                
                 //printfilemap();
                 }
+                out.writeUTF("OK");
                 
                 break;
             case "NEWCHUNKSERVER":
@@ -130,12 +131,30 @@ class Listener implements Runnable {
                 out.writeUTF("OK");
                 break; 
             case "CHUNKRETRIEVAL":
+                //System.out.println(args[1]+" "+args[2]);
                 String checkfile= args[1]; //args[1] starts with this filename
-                String chunkserverIDcheck = args[2];
+                int chunkserverIDcheck = Integer.parseInt(args[2]);
+                
                 String checkfilename = checkfile.split("_")[0];
                 int checkfilechunk = Integer.parseInt(checkfile.split("_")[1]);
+                //System.out.println("the filename is "+checkfilename+" chunk is "+checkfilechunk);
                 ArrayList<String> hostnames = new ArrayList<String>();
+                
                 hostnames = filemap.get(checkfilename).get(checkfilechunk);
+                //System.out.println("the hostnames are "+hostnames);
+                String chunkmissinghost = hashtable.get(chunkserverIDcheck);
+                //System.out.println("missing chunk host is "+chunkmissinghost);
+                hostnames.remove(chunkmissinghost);
+                String missingchunkreply = "CHUNKRETRIEVALRESPONSE ";
+                for(String host: hostnames)
+                {
+                    missingchunkreply += host +" ";
+                }
+                out.writeUTF(missingchunkreply);
+                //System.out.println("the return string is "+missingchunkreply);
+                
+                //System.out.println("the server requested the corrupted chunk is "+chunkmissinghost);
+                //System.out.println("The remaining hosts that contains the chunks are "+hostnames);
                   
                 
                 /*File dir = new File("Chunks/");
@@ -143,22 +162,18 @@ class Listener implements Runnable {
                 if (directoryListing != null)
                 {
                     for (File child : directoryListing) 
-                    {
-                        
-                        
+                    {                       
                         if(child.toString().startsWith(checkfile) && !child.toString().endsWith(chunkserverIDcheck) && !child.toString().endsWith(chunkserverIDcheck+".xml"))
                         {
                             System.out.println("The files found out are "+child.toString());
-                        }
-                                
-                        
+                        }                       
                     }
                 }*/
                 break;
             default:
                 System.out.println("");            
         }           
-        }catch(Exception e){System.out.println(e.toString());}
+        }catch(Exception e){System.out.println("The exception in answer(message) in controller is "+e.toString());}
     }
 
     private static void printfilemap()
@@ -241,7 +256,7 @@ class Listener implements Runnable {
             
             }
         } catch (IOException ex) {
-            System.out.println("This is an exception");
+            System.out.println("The exception in controller is  "+ex.toString());
         }
         
         
@@ -260,7 +275,7 @@ public class Controller {
             hashtable = new Hashtable<Integer,String>();
             new Thread(new Listener()).start();
         } catch (IOException ex) {
-            Logger.getLogger(Controller.class.getName()).log(Level.SEVERE, null, ex);
+            System.out.println("the exception in controller in controller is "+ex.toString());
         }
         
         

@@ -83,13 +83,13 @@ class minorheartbeats implements Runnable
             heartbeatbyte = heartbeatstring.getBytes("ISO-8859-1");
             //System.out.println("MINORHEARTBEAT "+chunkserverID+" "+heartbeatbytelength+" "+heartbeatstring);
             dout.writeUTF("MINORHEARTBEAT "+chunkserverID+" "+heartbeatbytelength);
-            dout.write(heartbeatbyte);
+            dout.write(heartbeatbyte);            
             din.readUTF();
             soc.close();
             }
             
         }
-        catch(Exception e){}     
+        catch(Exception e){System.out.println("Exception in minorheart thread in chunkserver "+e.toString());}     
     }  
 }
 
@@ -129,7 +129,7 @@ class majorheartbeats implements Runnable
             soc.close();           
             }
         }
-        catch(Exception e){}     
+        catch(Exception e){System.out.println("Exception in majorheart thread in chunkserver "+e.toString());}
     }
     
 }
@@ -196,30 +196,34 @@ class ChunkChecker implements Runnable
                             Fin.read(readfilebytes);
                             if(SHA1FromBytes(readfilebytes).equals(n.getTextContent()))
                             {
-                                //System.out.println("The hashcode is matching");
-                            
+                                //System.out.println("The hashcode is matching");                            
                             }
                             else
                             {
-                                //System.out.println("the hashcode didnt match for "+child.toString());
+                                System.out.println("the hashcode didnt match for "+child.toString());
                                 Socket soc = new Socket(conthostname, contportnum);
                                 DataOutputStream dout = new DataOutputStream(soc.getOutputStream());
                                 DataInputStream din = new DataInputStream(soc.getInputStream());
-                                String[] args = file.toString().split("_");
-                                dout.writeUTF("CHUNKRETRIEVAL "+args[0]+"_"+args[1]+" "+chunkserverID);                       
+                                String[] args = file.getName().split("_");
+                                dout.writeUTF("CHUNKRETRIEVAL "+args[0]+"_"+args[1]+" "+chunkserverID);
+                                String missingchunkresponse = din.readUTF();
+                                String host = missingchunkresponse.split(" ")[1];
+                                Socket fixchunksoc = new Socket(host.split("/")[0],Integer.parseInt(host.split("/")[1]));
+                                DataOutputStream fixdout = new DataOutputStream(fixchunksoc.getOutputStream());
+                                DataInputStream fixdin = new DataInputStream(fixchunksoc.getInputStream());
+                                fixdout.writeUTF("READ "+args[0]+"_"+args[1]);                                
+                                byte[] chunkreadbyte = new byte[fixdin.readInt()];
+                                fixdin.readFully(chunkreadbyte);
                                 
-                            }
-                            
-                            
-                            
-                            
+                                
+                                
+                            }                 
                         }
-
                     }
-                } 
+                }
             }
     
-        }catch(Exception e){System.out.println("The exception is "+e.toString());}
+        }catch(Exception e){System.out.println("The exception in chunkchecker in chunkserver is "+e.toString());}
     }
 }
 
@@ -343,7 +347,7 @@ class ChunkServerListenener implements Runnable
         StreamResult result = new StreamResult(new File("Chunks/"+FileName+"_"+chunkserverID+".xml"));
         transformer.transform(source, result); 
         } catch (Exception ex) {
-            Logger.getLogger(ChunkServerListenener.class.getName()).log(Level.SEVERE, null, ex);
+            System.out.println("The exception in createxml in chunkserver is "+ex.toString());
         }        
     }
       
@@ -422,7 +426,7 @@ class ChunkServerListenener implements Runnable
             default:
                 System.out.println("");            
         }        
-        }catch(Exception e){}        
+        }catch(Exception e){System.out.println("The exception in answer(message) in chunkserver "+e.toString());}        
     }
 
     @Override
@@ -438,7 +442,7 @@ class ChunkServerListenener implements Runnable
             answer(soc);           
         }
         } catch (Exception ex) 
-        {//System.out.println("connection closed");
+        {System.out.println("The exception in chunklistener in chunkserver is "+ex.toString());
             
         }
         
@@ -483,7 +487,7 @@ public class ChunkServer {
             ChunkChecker chunkchecker = new ChunkChecker(conthostname,contportnum, chunkserverID);
             new Thread(chunkchecker).start();
         
-        } catch (IOException ex) {
+        } catch (IOException ex) { System.out.println("The exception in chunkserver in chunkserver is "+ex.toString());
             
         }
     }   

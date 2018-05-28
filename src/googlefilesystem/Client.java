@@ -146,7 +146,7 @@ public class Client {
             Socket readsocket = new Socket(chunkhost, chunkport);
             DataInputStream din = new DataInputStream( readsocket.getInputStream());
             DataOutputStream dout = new DataOutputStream(readsocket.getOutputStream());            
-            dout.writeUTF("READ "+filename+"_"+chunkseq);            
+            dout.writeUTF("READ "+filename+"_"+chunkseq);
             byte[] readbyte = new byte[din.readInt()];
             din.readFully(readbyte);
             return readbyte;
