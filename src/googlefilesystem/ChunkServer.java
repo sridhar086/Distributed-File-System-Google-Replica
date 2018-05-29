@@ -71,7 +71,7 @@ class minorheartbeats implements Runnable
         try
         {
             while(true){
-            Thread.sleep(10000);
+            Thread.sleep(30000);
             //System.out.println("In minor hearbeat");
             String heartbeatstring = new String();
             heartbeatstring = inv.TransferAndSend();
@@ -113,7 +113,7 @@ class majorheartbeats implements Runnable
         try
         {
             while(true){
-            Thread.sleep(15000);
+            Thread.sleep(300000);
             String heartbeatstring = new String();
             heartbeatstring = inv.Send();
             Socket soc = new Socket(conthostname,contportnum);
@@ -192,8 +192,11 @@ class ChunkChecker implements Runnable
                             //System.out.println(n.getTextContent());
                             File file = new File(child.toString());
                             FileInputStream Fin = new FileInputStream(file);
+                            //FileOutputStream Fout = new FileOutputStream(file);               
+                
                             byte[] readfilebytes = new byte[(int)file.length()];
                             Fin.read(readfilebytes);
+                            Fin.close();
                             if(SHA1FromBytes(readfilebytes).equals(n.getTextContent()))
                             {
                                 //System.out.println("The hashcode is matching");                            
@@ -208,12 +211,19 @@ class ChunkChecker implements Runnable
                                 dout.writeUTF("CHUNKRETRIEVAL "+args[0]+"_"+args[1]+" "+chunkserverID);
                                 String missingchunkresponse = din.readUTF();
                                 String host = missingchunkresponse.split(" ")[1];
+                                soc.close();
+                                
                                 Socket fixchunksoc = new Socket(host.split("/")[0],Integer.parseInt(host.split("/")[1]));
                                 DataOutputStream fixdout = new DataOutputStream(fixchunksoc.getOutputStream());
                                 DataInputStream fixdin = new DataInputStream(fixchunksoc.getInputStream());
                                 fixdout.writeUTF("READ "+args[0]+"_"+args[1]);                                
                                 byte[] chunkreadbyte = new byte[fixdin.readInt()];
                                 fixdin.readFully(chunkreadbyte);
+                                file = new File(child.toString());
+                                FileOutputStream Fout = new FileOutputStream(file);
+                                Fout.write(chunkreadbyte);
+                                Fout.close();
+                                
                                 
                                 
                                 
